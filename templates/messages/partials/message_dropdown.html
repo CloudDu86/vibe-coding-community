@@ -1,0 +1,24 @@
+{% if messages %}
+    {% for message in messages %}
+    <a href="{% if message.related_post_id %}/posts/{{ message.related_post_id }}{% else %}/messages{% endif %}"
+       class="message-item {% if not message.is_read %}unread{% endif %}"
+       hx-post="/messages/{{ message.id }}/read"
+       hx-trigger="click"
+       hx-swap="none">
+        <div class="message-title">
+            {% if message.message_type == 'order' %}
+            <span class="message-type-icon">📦</span>
+            {% elif message.message_type == 'system' %}
+            <span class="message-type-icon">🔔</span>
+            {% else %}
+            <span class="message-type-icon">💬</span>
+            {% endif %}
+            {{ message.title }}
+        </div>
+        <div class="message-preview">{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</div>
+        <div class="message-time">{{ message.created_at[:16].replace('T', ' ') }}</div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="message-empty">暂无消息</div>
+{% endif %}

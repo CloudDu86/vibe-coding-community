@@ -45,7 +45,9 @@ MOCK_CATEGORIES: List[dict] = [
     {"id": "cat-4", "name": "桌面应用", "slug": "desktop", "description": "桌面软件开发问题", "display_order": 4, "is_active": True},
     {"id": "cat-5", "name": "后端服务", "slug": "backend", "description": "API、数据库、服务器问题", "display_order": 5, "is_active": True},
     {"id": "cat-6", "name": "AI/机器学习", "slug": "ai-ml", "description": "AI模型、机器学习相关问题", "display_order": 6, "is_active": True},
-    {"id": "cat-7", "name": "其他", "slug": "other", "description": "其他类型问题", "display_order": 99, "is_active": True},
+    {"id": "cat-7", "name": "Web3开发", "slug": "web3", "description": "区块链、智能合约、DApp开发问题", "display_order": 7, "is_active": True},
+    {"id": "cat-8", "name": "音视频开发", "slug": "av", "description": "音频、视频处理与流媒体开发问题", "display_order": 8, "is_active": True},
+    {"id": "cat-9", "name": "其他", "slug": "other", "description": "其他类型问题", "display_order": 99, "is_active": True},
 ]
 
 # 模拟帖子数据
@@ -53,6 +55,9 @@ MOCK_POSTS: Dict[str, dict] = {}
 
 # 模拟回复数据
 MOCK_RESPONSES: Dict[str, dict] = {}
+
+# 模拟消息数据
+MOCK_MESSAGES: Dict[str, dict] = {}
 
 # 会话存储（模拟登录状态）
 MOCK_SESSIONS: Dict[str, str] = {}  # token -> user_id

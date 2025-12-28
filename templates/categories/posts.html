@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ category.name }} - Vibe Coding互助社区{% endblock %}
+{% block title %}{{ category.name }} - AI创造互助社区{% endblock %}
 
 {% block content %}
 <div class="category-posts-page">
@@ -18,6 +18,8 @@
                 {% elif category.slug == 'desktop' %}🖥️
                 {% elif category.slug == 'backend' %}⚙️
                 {% elif category.slug == 'ai-ml' %}🤖
+                {% elif category.slug == 'web3' %}🔗
+                {% elif category.slug == 'av' %}🎬
                 {% else %}📁{% endif %}
             </span>
             {{ category.name }}

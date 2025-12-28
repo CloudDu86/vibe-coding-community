@@ -50,19 +50,12 @@ async def create_response(
             )
         return RedirectResponse(url=f"/posts/{post_id}?error={error}", status_code=303)
 
-    # HTMX 请求返回新的回复列表
+    # 接单成功后刷新整个页面（因为帖子状态改变了）
     if request.headers.get("HX-Request"):
-        responses = ResponseService.get_responses(post_id)
-        return templates.TemplateResponse(
-            "posts/partials/response_list.html",
-            {
-                "request": request,
-                "responses": responses,
-                "post": post,
-                "user": user,
-                "is_author": False,
-            },
-        )
+        from fastapi.responses import HTMLResponse
+        response = HTMLResponse(content="", status_code=200)
+        response.headers["HX-Redirect"] = f"/posts/{post_id}"
+        return response
 
     return RedirectResponse(url=f"/posts/{post_id}", status_code=303)
 

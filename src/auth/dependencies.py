@@ -30,29 +30,37 @@ async def get_current_user(request: Request) -> Optional[dict]:
                 return user
         return None
 
-    # 真实模式：JWT 验证
+    # 真实模式：使用 Supabase 验证 token
     try:
-        from jose import jwt, JWTError
-        from src.core.supabase import get_supabase_client
+        from supabase import create_client
 
-        payload = jwt.decode(
-            access_token,
-            settings.SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            audience="authenticated",
+        # 创建带有 access_token 的 Supabase 客户端
+        supabase = create_client(
+            settings.SUPABASE_URL,
+            settings.SUPABASE_ANON_KEY
         )
-        user_id = payload.get("sub")
-        if user_id is None:
+
+        # 使用 access_token 获取用户
+        user_response = supabase.auth.get_user(access_token)
+
+        if not user_response or not user_response.user:
+            print(f"[Auth] Invalid token - no user returned")
             return None
 
-        supabase = get_supabase_client()
+        user_id = user_response.user.id
+        user_email = user_response.user.email
+
+        # 获取用户资料
         result = supabase.table("profiles").select("*").eq("id", user_id).single().execute()
 
         if result.data:
-            return {**result.data, "email": payload.get("email")}
+            return {**result.data, "email": user_email}
+
+        print(f"[Auth] User profile not found for id: {user_id}")
         return None
 
-    except Exception:
+    except Exception as e:
+        print(f"[Auth] Token verification error: {type(e).__name__}: {e}")
         return None
 
 

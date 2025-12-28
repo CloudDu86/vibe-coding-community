@@ -1,4 +1,4 @@
--- Vibe Coding互助社区 - Supabase 数据库 Schema
+-- AI创造互助社区 - Supabase 数据库 Schema
 -- 在 Supabase SQL Editor 中执行此脚本
 
 -- =====================================================
@@ -60,6 +60,8 @@ INSERT INTO public.categories (name, slug, description, display_order) VALUES
     ('桌面应用', 'desktop', '桌面软件开发问题', 4),
     ('后端服务', 'backend', 'API、数据库、服务器问题', 5),
     ('AI/机器学习', 'ai-ml', 'AI模型、机器学习相关问题', 6),
+    ('Web3开发', 'web3', '区块链、智能合约、DApp开发问题', 7),
+    ('音视频开发', 'av', '音频、视频处理与流媒体开发问题', 8),
     ('其他', 'other', '其他类型问题', 99);
 
 -- =====================================================
@@ -205,3 +207,37 @@ CREATE TRIGGER update_posts_updated_at
 CREATE TRIGGER update_responses_updated_at
     BEFORE UPDATE ON public.responses
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
+-- 6. 消息通知表 (messages)
+-- =====================================================
+CREATE TABLE public.messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    recipient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    message_type VARCHAR(20) NOT NULL CHECK (message_type IN ('system', 'order', 'user')),
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    related_post_id UUID REFERENCES public.posts(id) ON DELETE SET NULL,
+    related_response_id UUID REFERENCES public.responses(id) ON DELETE SET NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 消息索引
+CREATE INDEX idx_messages_recipient ON public.messages(recipient_id);
+CREATE INDEX idx_messages_is_read ON public.messages(recipient_id, is_read);
+CREATE INDEX idx_messages_created_at ON public.messages(created_at DESC);
+
+-- 启用 RLS
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+-- RLS 策略 - messages
+CREATE POLICY "Users can view own messages"
+    ON public.messages FOR SELECT USING (auth.uid() = recipient_id);
+
+CREATE POLICY "Users can update own messages"
+    ON public.messages FOR UPDATE USING (auth.uid() = recipient_id);
+
+CREATE POLICY "System can insert messages"
+    ON public.messages FOR INSERT WITH CHECK (true);

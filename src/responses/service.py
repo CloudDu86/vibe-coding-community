@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 from src.config import settings
+from src.messages.service import MessageService
 
 
 class ResponseService:
@@ -21,10 +22,15 @@ class ResponseService:
         if settings.is_demo_mode:
             from src.core.mock_data import MOCK_RESPONSES, MOCK_POSTS, MOCK_USERS, MOCK_SOLVER_PROFILES
 
+            # 检查帖子是否已被接单
+            post = MOCK_POSTS.get(post_id)
+            if post and post.get("status") != "open":
+                return False, "此单子已被其他人接了", None
+
             # 检查是否已回复
             for resp in MOCK_RESPONSES.values():
                 if resp["post_id"] == post_id and resp["solver_id"] == solver_id:
-                    return False, "您已经回复过此帖子", None
+                    return False, "您已经接过此单子", None
 
             resp_id = str(uuid.uuid4())
             solver = MOCK_USERS.get(solver_id, {})
@@ -35,48 +41,79 @@ class ResponseService:
                 "post_id": post_id,
                 "solver_id": solver_id,
                 "content": content,
-                "proposed_solution": proposed_solution,
-                "estimated_time": estimated_time,
-                "proposed_price": proposed_price,
-                "status": "pending",
+                "status": "accepted",  # 直接设为已接受
                 "created_at": datetime.now().isoformat(),
                 "profiles": solver,
                 "solver_profiles": solver_profile,
             }
             MOCK_RESPONSES[resp_id] = new_response
 
-            # 更新帖子回复数
-            post = MOCK_POSTS.get(post_id)
+            # 更新帖子状态和回复数
             if post:
-                post["response_count"] = (post.get("response_count") or 0) + 1
+                post["status"] = "in_progress"
+                post["response_count"] = 1
+
+                # 发送通知给求助者
+                MessageService.send_order_notification(
+                    requester_id=post["author_id"],
+                    solver_id=solver_id,
+                    solver_nickname=solver.get("nickname", "解决者"),
+                    solver_wechat=solver.get("wechat_id"),
+                    post_id=post_id,
+                    post_title=post.get("title", ""),
+                    response_id=resp_id,
+                )
 
             return True, None, new_response
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             existing = supabase.table("responses").select("id").eq("post_id", post_id).eq("solver_id", solver_id).execute()
             if existing.data:
-                return False, "您已经回复过此帖子", None
+                return False, "您已经接过此单子", None
+
+            # 检查帖子是否已被接单，并获取帖子信息
+            post_check = supabase.table("posts").select("status, author_id, title").eq("id", post_id).single().execute()
+            if post_check.data and post_check.data.get("status") != "open":
+                return False, "此单子已被其他人接了", None
 
             result = supabase.table("responses").insert({
                 "post_id": post_id,
                 "solver_id": solver_id,
                 "content": content,
-                "proposed_solution": proposed_solution,
-                "estimated_time": estimated_time,
-                "proposed_price": proposed_price,
+                "status": "accepted",  # 直接设为已接受
             }).execute()
 
-            post = supabase.table("posts").select("response_count").eq("id", post_id).single().execute()
-            if post.data:
-                new_count = (post.data.get("response_count") or 0) + 1
-                supabase.table("posts").update({"response_count": new_count}).eq("id", post_id).execute()
+            print(f"[Responses] Created response: {result.data}")
+
+            # 更新帖子状态为进行中，并增加回复数
+            supabase.table("posts").update({
+                "status": "in_progress",
+                "response_count": 1,
+            }).eq("id", post_id).execute()
+
+            # 发送通知给求助者
+            if result.data and post_check.data:
+                # 获取解决者信息
+                solver_info = supabase.table("profiles").select("nickname, wechat_id").eq("id", solver_id).single().execute()
+                solver_data = solver_info.data if solver_info.data else {}
+
+                MessageService.send_order_notification(
+                    requester_id=post_check.data.get("author_id"),
+                    solver_id=solver_id,
+                    solver_nickname=solver_data.get("nickname", "解决者"),
+                    solver_wechat=solver_data.get("wechat_id"),
+                    post_id=post_id,
+                    post_title=post_check.data.get("title", ""),
+                    response_id=result.data[0].get("id"),
+                )
 
             return True, None, result.data[0] if result.data else None
 
         except Exception as e:
+            print(f"[Responses] Error creating response: {e}")
             return False, str(e), None
 
     @staticmethod
@@ -88,17 +125,20 @@ class ResponseService:
             responses.sort(key=lambda x: x.get("created_at", ""), reverse=True)
             return responses
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
+            # 只关联 profiles，包含联系方式
             result = supabase.table("responses").select(
-                "*, profiles(id, nickname, avatar_url), solver_profiles(experience_years, rating, total_solved)"
+                "*, profiles(id, nickname, avatar_url, wechat_id, phone)"
             ).eq("post_id", post_id).order("created_at", desc=True).execute()
 
+            print(f"[Responses] Found {len(result.data or [])} responses for post {post_id}")
             return result.data or []
 
-        except Exception:
+        except Exception as e:
+            print(f"[Responses] Error fetching responses: {e}")
             return []
 
     @staticmethod
@@ -108,8 +148,8 @@ class ResponseService:
             from src.core.mock_data import MOCK_RESPONSES
             return MOCK_RESPONSES.get(response_id)
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             result = supabase.table("responses").select(
@@ -146,8 +186,8 @@ class ResponseService:
 
             return True, None
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             response = supabase.table("responses").select("*, posts(author_id, id)").eq("id", response_id).single().execute()
@@ -193,8 +233,8 @@ class ResponseService:
 
             return True, None
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             response = supabase.table("responses").select("*, posts(author_id, id)").eq("id", response_id).single().execute()
@@ -234,8 +274,8 @@ class ResponseService:
             offset = (page - 1) * limit
             return responses[offset:offset + limit], total
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             offset = (page - 1) * limit

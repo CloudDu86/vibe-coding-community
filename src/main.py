@@ -11,6 +11,7 @@ from src.users.router import router as users_router
 from src.posts.router import router as posts_router
 from src.categories.router import router as categories_router
 from src.responses.router import router as responses_router
+from src.messages.router import router as messages_router
 from src.categories.service import CategoryService
 from src.posts.service import PostService
 
@@ -37,6 +38,7 @@ app.include_router(users_router, prefix="/users", tags=["用户"])
 app.include_router(posts_router, prefix="/posts", tags=["帖子"])
 app.include_router(categories_router, prefix="/categories", tags=["分类"])
 app.include_router(responses_router, prefix="/responses", tags=["回复"])
+app.include_router(messages_router, prefix="/messages", tags=["消息"])
 
 
 @app.get("/", response_class=HTMLResponse)
