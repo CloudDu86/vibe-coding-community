@@ -58,6 +58,7 @@ class ResponseService:
                     requester_id=post["author_id"],
                     solver_id=solver_id,
                     solver_nickname=solver.get("nickname", "解决者"),
+                    solver_bio=solver.get("bio"),
                     solver_wechat=solver.get("wechat_id"),
                     post_id=post_id,
                     post_title=post.get("title", ""),
@@ -96,14 +97,15 @@ class ResponseService:
 
             # 发送通知给求助者
             if result.data and post_check.data:
-                # 获取解决者信息
-                solver_info = supabase.table("profiles").select("nickname, wechat_id").eq("id", solver_id).single().execute()
+                # 获取解决者信息（包含简介）
+                solver_info = supabase.table("profiles").select("nickname, bio, wechat_id").eq("id", solver_id).single().execute()
                 solver_data = solver_info.data if solver_info.data else {}
 
                 MessageService.send_order_notification(
                     requester_id=post_check.data.get("author_id"),
                     solver_id=solver_id,
                     solver_nickname=solver_data.get("nickname", "解决者"),
+                    solver_bio=solver_data.get("bio"),
                     solver_wechat=solver_data.get("wechat_id"),
                     post_id=post_id,
                     post_title=post_check.data.get("title", ""),
@@ -258,6 +260,53 @@ class ResponseService:
                     new_count = (solver.data.get("total_solved") or 0) + 1
                     supabase.table("solver_profiles").update({"total_solved": new_count}).eq("user_id", solver_id).execute()
 
+            return True, None
+
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
+    def update_solution(
+        response_id: str,
+        solver_id: str,
+        solution: str,
+        attachment_url: Optional[str] = None,
+    ) -> Tuple[bool, Optional[str]]:
+        """更新解决方案，状态改为待审核"""
+        if settings.is_demo_mode:
+            from src.core.mock_data import MOCK_RESPONSES
+
+            response = MOCK_RESPONSES.get(response_id)
+            if not response:
+                return False, "回复不存在"
+            if response.get("solver_id") != solver_id:
+                return False, "无权操作此回复"
+
+            response["proposed_solution"] = solution
+            response["attachment_url"] = attachment_url
+            response["status"] = "pending_review"  # 改为待审核状态
+            return True, None
+
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
+
+        try:
+            response = supabase.table("responses").select("solver_id").eq("id", response_id).single().execute()
+
+            if not response.data:
+                return False, "回复不存在"
+
+            if response.data.get("solver_id") != solver_id:
+                return False, "无权操作此回复"
+
+            update_data = {
+                "proposed_solution": solution,
+                "status": "pending_review",  # 改为待审核状态
+            }
+            if attachment_url:
+                update_data["attachment_url"] = attachment_url
+
+            supabase.table("responses").update(update_data).eq("id", response_id).execute()
             return True, None
 
         except Exception as e:

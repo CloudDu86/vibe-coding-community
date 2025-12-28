@@ -13,7 +13,7 @@
     <div class="alert alert-error">{{ error }}</div>
     {% endif %}
 
-    <form action="/posts/create" method="post" class="card create-form">
+    <form action="/posts/create" method="post" class="card create-form" hx-boost="false">
         <div class="form-group">
             <label class="form-label" for="title">标题 <span class="required">*</span></label>
             <input type="text"
@@ -71,27 +71,15 @@
                       placeholder="粘贴相关的代码片段"></textarea>
         </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label class="form-label" for="budget_type">预算类型</label>
-                <select id="budget_type" name="budget_type" class="form-select">
-                    <option value="">不设预算</option>
-                    <option value="fixed">固定价格</option>
-                    <option value="hourly">按小时计费</option>
-                    <option value="negotiable">可协商</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="budget_amount">预算金额 (¥)</label>
-                <input type="number"
-                       id="budget_amount"
-                       name="budget_amount"
-                       class="form-input"
-                       min="0"
-                       step="0.01"
-                       placeholder="0.00">
-            </div>
+        <div class="form-group">
+            <label class="form-label" for="budget_amount">预算金额 (¥) <span class="required">*</span></label>
+            <input type="number"
+                   id="budget_amount"
+                   name="budget_amount"
+                   class="form-input"
+                   min="0"
+                   step="0.01"
+                   placeholder="请输入预算金额">
         </div>
 
         <div class="form-group">
@@ -226,4 +214,24 @@
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.create-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const budgetInput = document.getElementById('budget_amount');
+            const budgetAmount = budgetInput.value.trim();
+
+            if (budgetAmount === '' || isNaN(parseFloat(budgetAmount)) || parseFloat(budgetAmount) <= 0) {
+                e.preventDefault();
+                alert('请输入预算');
+                budgetInput.focus();
+                return false;
+            }
+            return true;
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -1,11 +1,17 @@
 from pathlib import Path
-from fastapi import APIRouter, Request, Form, Depends
+import os
+import uuid
+from fastapi import APIRouter, Request, Form, Depends, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from src.auth.dependencies import get_current_user, require_auth, require_solver
 from src.responses.service import ResponseService
 from src.posts.service import PostService
+
+# 上传目录
+UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "static" / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent.parent / "templates")
@@ -155,3 +161,44 @@ async def complete_response(
         return RedirectResponse(url=f"/posts/{post_id}?error={error}", status_code=303)
 
     return RedirectResponse(url=f"/posts/{post_id}?success=问题已标记为解决", status_code=303)
+
+
+@router.post("/{response_id}/solution")
+async def upload_solution(
+    request: Request,
+    response_id: str,
+    solution: str = Form(...),
+    attachment: UploadFile = File(None),
+    user: dict = Depends(require_auth),
+):
+    """上传解决方案"""
+    # 处理附件上传
+    attachment_url = None
+    if attachment and attachment.filename:
+        # 生成唯一文件名
+        file_ext = os.path.splitext(attachment.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = UPLOAD_DIR / unique_filename
+
+        # 保存文件
+        content = await attachment.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        attachment_url = f"/static/uploads/{unique_filename}"
+
+    success, error = ResponseService.update_solution(
+        response_id=response_id,
+        solver_id=user["id"],
+        solution=solution,
+        attachment_url=attachment_url,
+    )
+
+    if not success:
+        return RedirectResponse(url=f"/users/my-orders?error={error}", status_code=303)
+
+    # 获取帖子ID以便跳转到帖子详情
+    response = ResponseService.get_response(response_id)
+    post_id = response["post_id"] if response else ""
+
+    return RedirectResponse(url=f"/posts/{post_id}?success=解决方案已上传，等待求助者确认", status_code=303)

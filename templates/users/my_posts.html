@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}我的求助单 - AI创造互助社区{% endblock %}
+
+{% block content %}
+<div class="my-posts-page">
+    <div class="page-header">
+        <h1>我的求助单</h1>
+        <a href="/posts/create" class="btn-primary">发布新求助</a>
+    </div>
+
+    <!-- 未解决的求助单 -->
+    <div class="card section">
+        <h2 class="section-title">未解决 ({{ pending_posts|length }})</h2>
+        {% if pending_posts %}
+        <div class="posts-list">
+            {% for post in pending_posts %}
+            <a href="/posts/{{ post.id }}" class="post-item">
+                <div class="post-main">
+                    <span class="post-title">{{ post.title }}</span>
+                    {% if post.has_pending_review %}
+                    <span class="post-status status-pending_review">审核中</span>
+                    {% else %}
+                    <span class="post-status status-{{ post.status }}">
+                        {% if post.status == 'open' %}待接单{% elif post.status == 'in_progress' %}进行中{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="post-meta">
+                    <span class="post-category">{{ post.categories.name if post.categories else '' }}</span>
+                    <span class="post-budget">¥{{ post.budget_amount or 0 }}</span>
+                    <span class="post-time">{{ post.created_at[:10] if post.created_at else '' }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>暂无未解决的求助单</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 已解决的求助单 -->
+    <div class="card section">
+        <h2 class="section-title">已解决 ({{ resolved_posts|length }})</h2>
+        {% if resolved_posts %}
+        <div class="posts-list">
+            {% for post in resolved_posts %}
+            <a href="/posts/{{ post.id }}" class="post-item resolved">
+                <div class="post-main">
+                    <span class="post-title">{{ post.title }}</span>
+                    <span class="post-status status-{{ post.status }}">
+                        {% if post.status == 'resolved' %}已解决{% elif post.status == 'closed' %}已关闭{% endif %}
+                    </span>
+                </div>
+                <div class="post-meta">
+                    <span class="post-category">{{ post.categories.name if post.categories else '' }}</span>
+                    <span class="post-budget">¥{{ post.budget_amount or 0 }}</span>
+                    <span class="post-time">{{ post.created_at[:10] if post.created_at else '' }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>暂无已解决的求助单</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.my-posts-page {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+.section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.post-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+}
+
+.post-item:hover {
+    background: var(--bg-tertiary, #e5e7eb);
+    transform: translateX(4px);
+}
+
+.post-item.resolved {
+    opacity: 0.7;
+}
+
+.post-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.post-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.status-open {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-in_progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-resolved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-closed {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.status-pending_review {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.post-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.post-budget {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.post-category {
+    background: var(--bg-tertiary, #e5e7eb);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .post-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .post-meta {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+</style>
+{% endblock %}

@@ -55,8 +55,8 @@ class PostService:
             MOCK_POSTS[post_id] = new_post
             return True, None, new_post
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             result = supabase.table("posts").insert({
@@ -103,6 +103,8 @@ class PostService:
         status: Optional[str] = None,
         urgency: Optional[str] = None,
         author_id: Optional[str] = None,
+        search_query: Optional[str] = None,
+        exclude_resolved: bool = False,
         page: int = 1,
         limit: int = 20,
     ) -> Tuple[List[dict], int]:
@@ -125,11 +127,18 @@ class PostService:
             if status:
                 posts = [p for p in posts if p.get("status") == status]
 
+            if exclude_resolved:
+                posts = [p for p in posts if p.get("status") in ["open", "in_progress"]]
+
             if urgency:
                 posts = [p for p in posts if p.get("urgency") == urgency]
 
             if author_id:
                 posts = [p for p in posts if p.get("author_id") == author_id]
+
+            if search_query:
+                q = search_query.lower()
+                posts = [p for p in posts if q in p.get("title", "").lower() or q in p.get("description", "").lower()]
 
             # 排序（按创建时间倒序）
             posts.sort(key=lambda x: x.get("created_at", ""), reverse=True)
@@ -157,11 +166,18 @@ class PostService:
             if status:
                 query = query.eq("status", status)
 
+            if exclude_resolved:
+                query = query.in_("status", ["open", "in_progress"])
+
             if urgency:
                 query = query.eq("urgency", urgency)
 
             if author_id:
                 query = query.eq("author_id", author_id)
+
+            if search_query:
+                # 使用 ilike 进行模糊搜索（标题或描述）
+                query = query.or_(f"title.ilike.%{search_query}%,description.ilike.%{search_query}%")
 
             offset = (page - 1) * limit
             result = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
@@ -190,8 +206,8 @@ class PostService:
 
             return True, None
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             post = supabase.table("posts").select("author_id").eq("id", post_id).single().execute()
@@ -223,8 +239,8 @@ class PostService:
             del MOCK_POSTS[post_id]
             return True, None
 
-        from src.core.supabase import get_supabase_client
-        supabase = get_supabase_client()
+        from src.core.supabase import get_supabase_admin_client
+        supabase = get_supabase_admin_client()
 
         try:
             post = supabase.table("posts").select("author_id").eq("id", post_id).single().execute()

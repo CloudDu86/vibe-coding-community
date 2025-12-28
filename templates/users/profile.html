@@ -18,13 +18,6 @@
         </div>
     </div>
 
-    {% if user.user_role in ['solver', 'both'] %}
-    <div class="solver-link-card card">
-        <h3>解决者资料</h3>
-        <p>完善您的解决者资料，让求助者更了解您的专业能力</p>
-        <a href="/users/solver/profile" class="btn-primary">编辑解决者资料</a>
-    </div>
-    {% endif %}
 </div>
 
 <style>
@@ -41,22 +34,6 @@
 .profile-page .card {
     padding: 2rem;
     margin-bottom: 1.5rem;
-}
-
-.solver-link-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-}
-
-.solver-link-card h3 {
-    margin: 0;
-}
-
-.solver-link-card p {
-    color: var(--text-muted);
-    margin: 0;
 }
 
 @media (min-width: 1200px) {

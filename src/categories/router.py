@@ -19,9 +19,9 @@ async def categories_list(
     """分类列表页面"""
     categories = CategoryService.get_all_categories()
 
-    # 获取每个分类的帖子数量
+    # 获取每个分类的帖子数量（只计算未完成的）
     for category in categories:
-        posts, total = PostService.get_posts(category_slug=category["slug"], limit=1)
+        posts, total = PostService.get_posts(category_slug=category["slug"], exclude_resolved=True, limit=1)
         category["post_count"] = total
 
     return templates.TemplateResponse(

@@ -8,8 +8,19 @@
     <p>AI编程遇到问题？让专家来帮你解决！</p>
     <div class="cta-buttons">
         <a href="/posts/create" class="btn-primary">发布求助</a>
-        <a href="/posts" class="btn-secondary">浏览问题</a>
+        <a href="/categories" class="btn-secondary">浏览分类</a>
     </div>
+</section>
+
+<!-- 搜索已解决的帖子 -->
+<section class="search-section">
+    <form action="/posts" method="get" class="search-form">
+        <input type="hidden" name="status" value="resolved">
+        <div class="search-input-wrapper">
+            <input type="text" name="q" class="search-input" placeholder="搜索已解决的帖子...">
+            <button type="submit" class="search-btn">搜索</button>
+        </div>
+    </form>
 </section>
 
 <section class="features">
@@ -76,6 +87,53 @@
 </section>
 
 <style>
+.search-section {
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.search-form {
+    width: 100%;
+}
+
+.search-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--card-background);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.search-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.search-btn:hover {
+    background: var(--primary-hover);
+}
+
 .features {
     margin-bottom: 3rem;
 }

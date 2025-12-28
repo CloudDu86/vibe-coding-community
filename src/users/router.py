@@ -19,6 +19,62 @@ async def profile_page(request: Request, user: dict = Depends(require_auth)):
     )
 
 
+@router.get("/my-posts", response_class=HTMLResponse)
+async def my_posts_page(request: Request, user: dict = Depends(require_auth)):
+    """我的求助单页面"""
+    from src.posts.service import PostService
+    from src.responses.service import ResponseService
+
+    # 获取用户所有求助单
+    all_posts, total = PostService.get_posts(author_id=user["id"], limit=100)
+
+    # 检查每个帖子是否有待审核的解决方案
+    for post in all_posts:
+        responses = ResponseService.get_responses(post["id"])
+        post["has_pending_review"] = any(r.get("status") == "pending_review" for r in responses)
+
+    # 分类：未解决和已解决
+    pending_posts = [p for p in all_posts if p.get("status") in ["open", "in_progress"]]
+    resolved_posts = [p for p in all_posts if p.get("status") in ["resolved", "closed"]]
+
+    return templates.TemplateResponse(
+        "users/my_posts.html",
+        {
+            "request": request,
+            "title": "我的求助单",
+            "user": user,
+            "pending_posts": pending_posts,
+            "resolved_posts": resolved_posts,
+        },
+    )
+
+
+@router.get("/my-orders", response_class=HTMLResponse)
+async def my_orders_page(request: Request, user: dict = Depends(require_auth)):
+    """我接的单子页面"""
+    if user.get("user_role") not in ["solver", "both"]:
+        return RedirectResponse(url="/users/profile", status_code=303)
+
+    from src.responses.service import ResponseService
+
+    # 获取解决者接的所有单子
+    responses, total = ResponseService.get_solver_responses(user["id"], limit=100)
+    # 分类：进行中（包括已接单和审核中）和已完成
+    in_progress = [r for r in responses if r.get("status") in ["accepted", "pending_review"]]
+    completed = [r for r in responses if r.get("status") == "completed"]
+
+    return templates.TemplateResponse(
+        "users/my_orders.html",
+        {
+            "request": request,
+            "title": "我接的单子",
+            "user": user,
+            "in_progress": in_progress,
+            "completed": completed,
+        },
+    )
+
+
 @router.post("/profile")
 async def update_profile(
     request: Request,

@@ -17,6 +17,7 @@ async def posts_list(
     category: str = Query(None),
     status: str = Query(None),
     urgency: str = Query(None),
+    q: str = Query(None),
     page: int = Query(1, ge=1),
     user: dict = Depends(get_current_user),
 ):
@@ -25,6 +26,7 @@ async def posts_list(
         category_slug=category,
         status=status,
         urgency=urgency,
+        search_query=q,
         page=page,
     )
 
@@ -43,6 +45,7 @@ async def posts_list(
                 "category": category,
                 "status": status,
                 "urgency": urgency,
+                "search_query": q,
             },
         )
 
@@ -50,7 +53,7 @@ async def posts_list(
         "posts/list.html",
         {
             "request": request,
-            "title": "浏览求助",
+            "title": "浏览求助" if not q else f"搜索: {q}",
             "user": user,
             "posts": posts,
             "categories": categories,
@@ -60,6 +63,7 @@ async def posts_list(
             "current_category": category,
             "current_status": status,
             "current_urgency": urgency,
+            "search_query": q,
         },
     )
 
@@ -92,8 +96,7 @@ async def create_post(
     ai_tool_used: str = Form(None),
     error_message: str = Form(None),
     code_snippet: str = Form(None),
-    budget_type: str = Form(None),
-    budget_amount: float = Form(None),
+    budget_amount: float = Form(...),
     urgency: str = Form("medium"),
     user: dict = Depends(require_auth),
 ):
@@ -106,7 +109,7 @@ async def create_post(
         ai_tool_used=ai_tool_used,
         error_message=error_message,
         code_snippet=code_snippet,
-        budget_type=budget_type,
+        budget_type=None,
         budget_amount=budget_amount,
         urgency=urgency,
     )
@@ -178,10 +181,22 @@ async def post_detail(
     # 检查是否是作者
     is_author = user and user["id"] == post["author_id"]
 
-    # 检查当前用户是否已回复
+    # 检查当前用户是否已回复，并获取用户的回复
     has_responded = False
+    user_response = None
+    has_pending_review = False
     if user:
-        has_responded = any(r["solver_id"] == user["id"] for r in responses)
+        for r in responses:
+            if r["solver_id"] == user["id"]:
+                has_responded = True
+                user_response = r
+                break
+
+    # 检查是否有待审核的解决方案
+    for r in responses:
+        if r.get("status") == "pending_review":
+            has_pending_review = True
+            break
 
     return templates.TemplateResponse(
         "posts/detail.html",
@@ -193,6 +208,8 @@ async def post_detail(
             "responses": responses,
             "is_author": is_author,
             "has_responded": has_responded,
+            "user_response": user_response,
+            "has_pending_review": has_pending_review,
         },
     )
 

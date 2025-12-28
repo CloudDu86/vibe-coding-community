@@ -185,16 +185,22 @@ class MessageService:
         requester_id: str,
         solver_id: str,
         solver_nickname: str,
+        solver_bio: Optional[str],
         solver_wechat: Optional[str],
         post_id: str,
         post_title: str,
         response_id: str,
     ) -> Tuple[bool, Optional[str]]:
         """发送接单通知给求助者"""
+        content = f"解决者 {solver_nickname} 已接下您的求助「{post_title}」。\n\n"
+
+        if solver_bio:
+            content += f"解决者简介：{solver_bio}\n\n"
+
         if solver_wechat:
-            content = f"解决者 {solver_nickname} 已接下您的求助「{post_title}」。\n\n请添加对方微信联系：{solver_wechat}"
+            content += f"微信号：{solver_wechat}"
         else:
-            content = f"解决者 {solver_nickname} 已接下您的求助「{post_title}」。\n\n请在帖子详情页查看解决者联系方式。"
+            content += "请在帖子详情页查看解决者联系方式。"
 
         success, error, _ = MessageService.create_message(
             recipient_id=requester_id,

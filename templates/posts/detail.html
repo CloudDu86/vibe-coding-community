@@ -10,9 +10,10 @@
                 {% if post.categories %}
                 <span class="tag tag-category">{{ post.categories.name }}</span>
                 {% endif %}
-                <span class="tag tag-status {{ post.status }}">
+                <span class="tag tag-status {% if has_pending_review and post.status == 'in_progress' %}pending_review{% else %}{{ post.status }}{% endif %}">
                     {% if post.status == 'open' %}待解决
-                    {% elif post.status == 'in_progress' %}进行中
+                    {% elif post.status == 'in_progress' %}
+                        {% if has_pending_review %}审核中{% else %}进行中{% endif %}
                     {% elif post.status == 'resolved' %}已解决
                     {% else %}已关闭{% endif %}
                 </span>
@@ -91,6 +92,38 @@
             </form>
         </section>
         {% endif %}
+
+        <!-- 解决方案展示区域 (仅求助者可见，且有解决方案时显示) -->
+        {% set pending_response = namespace(data=None) %}
+        {% for r in responses %}
+            {% if r.status == 'pending_review' and r.proposed_solution %}
+                {% set pending_response.data = r %}
+            {% endif %}
+        {% endfor %}
+
+        {% if is_author and pending_response.data and post.status == 'in_progress' %}
+        <section class="post-section solution-review-section">
+            <div class="solution-header">
+                <h2>解决方案</h2>
+                <span class="tag tag-status pending_review">审核中</span>
+            </div>
+            <div class="solution-content">{{ pending_response.data.proposed_solution }}</div>
+            {% if pending_response.data.attachment_url %}
+            <div class="solution-attachment">
+                <h3>附件</h3>
+                <a href="{{ pending_response.data.attachment_url }}" target="_blank" class="attachment-link">
+                    <span class="attachment-icon">📎</span>
+                    下载附件
+                </a>
+            </div>
+            {% endif %}
+            <div class="solution-actions">
+                <form action="/responses/{{ pending_response.data.id }}/complete" method="post" hx-boost="false">
+                    <button type="submit" class="btn-success">问题已解决</button>
+                </form>
+            </div>
+        </section>
+        {% endif %}
     </article>
 
     <!-- 回复区域 -->
@@ -125,6 +158,25 @@
             <div class="alert alert-warning">此单子已被接走</div>
             {% elif has_responded %}
             <div class="alert alert-success">您已接下此单，请联系求助者解决问题</div>
+
+            <!-- 解决者上传解决方案表单 -->
+            {% if user_response %}
+            <div class="card solution-upload-section">
+                <h3>上传解决方案</h3>
+                <form action="/responses/{{ user_response.id }}/solution" method="post" enctype="multipart/form-data" hx-boost="false">
+                    <div class="form-group">
+                        <label class="form-label">解决方案 <span class="required">*</span></label>
+                        <textarea name="solution" class="form-textarea" rows="6" placeholder="请详细描述您的解决方案..." required>{{ user_response.proposed_solution or '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">附件（可选）</label>
+                        <input type="file" name="attachment" class="form-input file-input" accept=".zip,.rar,.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg">
+                        <p class="form-hint">支持 zip, rar, pdf, doc, txt, 图片等格式</p>
+                    </div>
+                    <button type="submit" class="btn-primary">上传解决方案</button>
+                </form>
+            </div>
+            {% endif %}
             {% endif %}
         {% elif post.status == 'resolved' %}
             <div class="alert alert-success">此问题已解决</div>
@@ -262,6 +314,123 @@
 
 .required {
     color: var(--danger-color);
+}
+
+.solution-section {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.solution-section h2 {
+    color: #166534;
+}
+
+.solution-content {
+    background: white;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    margin-bottom: 1rem;
+}
+
+.solution-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-success {
+    background: #22c55e;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-success:hover {
+    background: #16a34a;
+}
+
+.solution-upload-section {
+    margin-top: 1rem;
+    padding: 1.5rem;
+}
+
+.solution-upload-section h3 {
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.file-input {
+    padding: 0.5rem;
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.solution-review-section {
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.solution-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.solution-header h2 {
+    margin: 0;
+    color: #92400e;
+}
+
+.tag-status.pending_review {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.solution-attachment {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: white;
+    border-radius: var(--border-radius);
+}
+
+.solution-attachment h3 {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+}
+
+.attachment-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.attachment-link:hover {
+    background: var(--primary-dark, #4338ca);
 }
 </style>
 {% endblock %}
