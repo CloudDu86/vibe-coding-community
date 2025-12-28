@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - Vibe Coding互助社区{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <h1 class="auth-title">创建账户</h1>
+        <p class="auth-subtitle">加入Vibe Coding互助社区</p>
+
+        <div id="register-form-container">
+            {% include "auth/partials/register_form.html" %}
+        </div>
+
+        <div class="auth-footer">
+            <p>已有账户？ <a href="/auth/login">立即登录</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 550px;
+    padding: 2.5rem;
+}
+
+.auth-title {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.role-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.role-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.role-option:hover {
+    border-color: var(--primary-color);
+}
+
+.role-option input[type="radio"] {
+    margin-top: 0.25rem;
+}
+
+.role-option input[type="radio"]:checked + .role-info {
+    color: var(--primary-color);
+}
+
+.role-option:has(input:checked) {
+    border-color: var(--primary-color);
+    background: #f0f4ff;
+}
+
+.role-info {
+    flex: 1;
+}
+
+.role-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.role-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}

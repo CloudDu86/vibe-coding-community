@@ -1,0 +1,52 @@
+{% if posts %}
+<div class="posts-list">
+    {% for post in posts %}
+    {% include "posts/partials/post_card.html" %}
+    {% endfor %}
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/posts?page={{ page - 1 }}{% if category %}&category={{ category }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if urgency %}&urgency={{ urgency }}{% endif %}"
+       hx-get="/posts?page={{ page - 1 }}{% if category %}&category={{ category }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if urgency %}&urgency={{ urgency }}{% endif %}"
+       hx-target="#posts-container"
+       class="btn-outline">
+        上一页
+    </a>
+    {% endif %}
+
+    <span class="page-info">第 {{ page }} / {{ total_pages }} 页</span>
+
+    {% if page < total_pages %}
+    <a href="/posts?page={{ page + 1 }}{% if category %}&category={{ category }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if urgency %}&urgency={{ urgency }}{% endif %}"
+       hx-get="/posts?page={{ page + 1 }}{% if category %}&category={{ category }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if urgency %}&urgency={{ urgency }}{% endif %}"
+       hx-target="#posts-container"
+       class="btn-outline">
+        下一页
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📭</div>
+    <p>暂无求助帖子</p>
+    <a href="/posts/create" class="btn-primary">发布第一条求助</a>
+</div>
+{% endif %}
+
+<style>
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.page-info {
+    color: var(--text-muted);
+}
+</style>

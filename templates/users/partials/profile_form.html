@@ -1,0 +1,99 @@
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+
+<form action="/users/profile" method="post"
+      hx-post="/users/profile"
+      hx-target="#profile-form-container"
+      hx-swap="innerHTML">
+    <div class="form-group">
+        <label class="form-label" for="nickname">昵称 <span class="required">*</span></label>
+        <input type="text"
+               id="nickname"
+               name="nickname"
+               class="form-input"
+               value="{{ user.nickname or '' }}"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="bio">个人简介</label>
+        <textarea id="bio"
+                  name="bio"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="介绍一下自己">{{ user.bio or '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="phone">手机号码</label>
+        <input type="tel"
+               id="phone"
+               name="phone"
+               class="form-input"
+               value="{{ user.phone or '' }}"
+               placeholder="用于接收通知">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="wechat_id">微信号</label>
+        <input type="text"
+               id="wechat_id"
+               name="wechat_id"
+               class="form-input"
+               value="{{ user.wechat_id or '' }}"
+               placeholder="方便与求助者/解决者沟通">
+    </div>
+
+    <div class="form-info">
+        <p><strong>邮箱:</strong> {{ user.email }}</p>
+        <p><strong>身份:</strong>
+            {% if user.user_role == 'asker' %}求助者
+            {% elif user.user_role == 'solver' %}解决者
+            {% else %}求助者 & 解决者{% endif %}
+        </p>
+        <p><strong>实名认证:</strong>
+            {% if user.id_card_verified %}
+            <span class="verified">已认证</span>
+            {% else %}
+            <span class="unverified">未认证</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <button type="submit" class="btn-primary">保存修改</button>
+</form>
+
+<style>
+.required {
+    color: var(--danger-color);
+}
+
+.form-info {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+
+.form-info p {
+    margin: 0.5rem 0;
+    color: var(--text-muted);
+}
+
+.form-info strong {
+    color: var(--text-color);
+}
+
+.verified {
+    color: var(--success-color);
+}
+
+.unverified {
+    color: var(--warning-color);
+}
+</style>

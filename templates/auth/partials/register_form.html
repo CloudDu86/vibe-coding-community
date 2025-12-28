@@ -1,0 +1,96 @@
+{% if error %}
+<div class="alert alert-error">
+    {{ error }}
+</div>
+{% endif %}
+
+<form hx-post="/auth/register"
+      hx-target="#register-form-container"
+      hx-swap="innerHTML"
+      class="auth-form">
+    <div class="form-group">
+        <label class="form-label" for="email">邮箱</label>
+        <input type="email"
+               id="email"
+               name="email"
+               class="form-input"
+               value="{{ email or '' }}"
+               placeholder="请输入邮箱"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="password">密码</label>
+        <input type="password"
+               id="password"
+               name="password"
+               class="form-input"
+               placeholder="至少6位字符"
+               minlength="6"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="nickname">昵称</label>
+        <input type="text"
+               id="nickname"
+               name="nickname"
+               class="form-input"
+               value="{{ nickname or '' }}"
+               placeholder="请输入昵称"
+               required>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">选择您的身份</label>
+        <div class="role-options">
+            <label class="role-option">
+                <input type="radio" name="user_role" value="asker" required>
+                <div class="role-info">
+                    <div class="role-title">求助者</div>
+                    <div class="role-desc">我是编程新手，需要专家帮助解决AI编程问题</div>
+                </div>
+            </label>
+            <label class="role-option">
+                <input type="radio" name="user_role" value="solver">
+                <div class="role-info">
+                    <div class="role-title">解决者</div>
+                    <div class="role-desc">我有编程经验，想帮助他人解决问题并获得报酬</div>
+                </div>
+            </label>
+            <label class="role-option">
+                <input type="radio" name="user_role" value="both">
+                <div class="role-info">
+                    <div class="role-title">两者都是</div>
+                    <div class="role-desc">我既可以求助也可以帮助他人</div>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn-primary btn-full">
+        <span class="htmx-indicator">注册中...</span>
+        <span class="btn-text">注册</span>
+    </button>
+</form>
+
+<style>
+.btn-full {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    margin-top: 1rem;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline;
+}
+
+.htmx-request .btn-text {
+    display: none;
+}
+</style>

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}浏览求助 - Vibe Coding互助社区{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>浏览求助</h1>
+    <p class="text-muted">共 {{ total }} 条求助</p>
+</div>
+
+<div class="posts-page-layout">
+    <aside class="filters-sidebar">
+        <div class="card">
+            <h3 class="filter-title">筛选</h3>
+
+            <form hx-get="/posts"
+                  hx-target="#posts-container"
+                  hx-swap="innerHTML"
+                  hx-trigger="change"
+                  class="filter-form">
+                <div class="form-group">
+                    <label class="form-label">分类</label>
+                    <select name="category" class="form-select">
+                        <option value="">全部分类</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.slug }}" {% if current_category == cat.slug %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select name="status" class="form-select">
+                        <option value="">全部状态</option>
+                        <option value="open" {% if current_status == 'open' %}selected{% endif %}>待解决</option>
+                        <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>进行中</option>
+                        <option value="resolved" {% if current_status == 'resolved' %}selected{% endif %}>已解决</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">紧急程度</label>
+                    <select name="urgency" class="form-select">
+                        <option value="">全部</option>
+                        <option value="urgent" {% if current_urgency == 'urgent' %}selected{% endif %}>紧急</option>
+                        <option value="high" {% if current_urgency == 'high' %}selected{% endif %}>较急</option>
+                        <option value="medium" {% if current_urgency == 'medium' %}selected{% endif %}>一般</option>
+                        <option value="low" {% if current_urgency == 'low' %}selected{% endif %}>不急</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </aside>
+
+    <main id="posts-container">
+        {% include "posts/partials/post_list.html" %}
+    </main>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.posts-page-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+}
+
+.filters-sidebar {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+}
+
+.filter-title {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.filter-form .form-group {
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .posts-page-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-sidebar {
+        position: static;
+    }
+}
+</style>
+{% endblock %}

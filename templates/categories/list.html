@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}项目分类 - Vibe Coding互助社区{% endblock %}
+
+{% block content %}
+<div class="categories-page">
+    <div class="page-header">
+        <h1>项目分类</h1>
+        <p class="text-muted">按项目类型浏览求助</p>
+    </div>
+
+    <div class="categories-grid">
+        {% for category in categories %}
+        <a href="/categories/{{ category.slug }}" class="category-card">
+            <div class="category-icon">
+                {% if category.slug == 'web' %}🌐
+                {% elif category.slug == 'app' %}📱
+                {% elif category.slug == 'wechat-mini' %}💬
+                {% elif category.slug == 'desktop' %}🖥️
+                {% elif category.slug == 'backend' %}⚙️
+                {% elif category.slug == 'ai-ml' %}🤖
+                {% else %}📁{% endif %}
+            </div>
+            <h3 class="category-name">{{ category.name }}</h3>
+            {% if category.description %}
+            <p class="category-desc">{{ category.description }}</p>
+            {% endif %}
+            <span class="category-count">{{ category.post_count or 0 }} 条求助</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.categories-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.category-card {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-color);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.category-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.category-name {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.category-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.category-count {
+    color: var(--primary-color);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

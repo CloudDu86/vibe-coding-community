@@ -1,0 +1,137 @@
+<article class="post-card">
+    <div class="post-header">
+        <a href="/posts/{{ post.id }}" class="post-title">{{ post.title }}</a>
+        <div class="post-tags">
+            {% if post.categories %}
+            <span class="tag tag-category">{{ post.categories.name }}</span>
+            {% endif %}
+            <span class="tag tag-status {{ post.status }}">
+                {% if post.status == 'open' %}待解决
+                {% elif post.status == 'in_progress' %}进行中
+                {% elif post.status == 'resolved' %}已解决
+                {% else %}已关闭{% endif %}
+            </span>
+            <span class="tag tag-urgency {{ post.urgency }}">
+                {% if post.urgency == 'urgent' %}紧急
+                {% elif post.urgency == 'high' %}较急
+                {% elif post.urgency == 'medium' %}一般
+                {% else %}不急{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <p class="post-description">{{ post.description[:200] }}{% if post.description|length > 200 %}...{% endif %}</p>
+
+    {% if post.ai_tool_used %}
+    <div class="post-ai-tool">
+        <span class="ai-tool-label">使用的AI工具:</span>
+        <span class="ai-tool-name">{{ post.ai_tool_used }}</span>
+    </div>
+    {% endif %}
+
+    <div class="post-meta">
+        <span class="meta-item">
+            <span class="meta-label">发布者:</span>
+            {% if post.profiles %}
+            <a href="/users/{{ post.profiles.id }}">{{ post.profiles.nickname }}</a>
+            {% else %}
+            匿名用户
+            {% endif %}
+        </span>
+        <span class="meta-item">
+            <span class="meta-label">浏览:</span> {{ post.view_count or 0 }}
+        </span>
+        <span class="meta-item">
+            <span class="meta-label">回复:</span> {{ post.response_count or 0 }}
+        </span>
+        {% if post.budget_amount %}
+        <span class="meta-item budget">
+            <span class="meta-label">预算:</span> ¥{{ post.budget_amount }}
+        </span>
+        {% endif %}
+    </div>
+</article>
+
+<style>
+.post-card {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+    margin-bottom: 1rem;
+}
+
+.post-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.post-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+    flex: 1;
+    min-width: 200px;
+}
+
+.post-title:hover {
+    color: var(--primary-color);
+}
+
+.post-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.post-description {
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.post-ai-tool {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.ai-tool-label {
+    color: var(--text-muted);
+}
+
+.ai-tool-name {
+    background: #f0f4ff;
+    color: var(--primary-color);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.post-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+}
+
+.meta-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.meta-item.budget {
+    color: var(--success-color);
+    font-weight: 500;
+}
+</style>

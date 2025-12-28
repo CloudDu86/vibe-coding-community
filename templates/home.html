@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Vibe Coding互助社区 - AI编程问题解决平台{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Vibe Coding互助社区</h1>
+    <p>AI编程遇到问题？让专家来帮你解决！</p>
+    <div class="cta-buttons">
+        <a href="/posts/create" class="btn-primary">发布求助</a>
+        <a href="/posts" class="btn-secondary">浏览问题</a>
+    </div>
+</section>
+
+<section class="features">
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>AI编程求助</h3>
+            <p>使用Cursor、Copilot等AI工具遇到问题？在这里找到答案</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">👨‍💻</div>
+            <h3>专家帮助</h3>
+            <p>经验丰富的开发者为您提供专业解决方案</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>技能变现</h3>
+            <p>有技术？帮助他人解决问题，获得报酬</p>
+        </div>
+    </div>
+</section>
+
+<section class="categories-section">
+    <h2 class="section-title">项目分类</h2>
+    <div class="categories-grid"
+         hx-get="/partials/categories"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+        <!-- 分类加载中 -->
+        <div class="category-card skeleton">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-text"></div>
+        </div>
+        <div class="category-card skeleton">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-text"></div>
+        </div>
+        <div class="category-card skeleton">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-text"></div>
+        </div>
+    </div>
+</section>
+
+<section class="recent-posts">
+    <div class="section-header">
+        <h2 class="section-title">最新求助</h2>
+        <a href="/posts" class="view-all">查看全部 →</a>
+    </div>
+    <div id="recent-posts-list"
+         hx-get="/partials/posts/recent"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+        <!-- 帖子加载中 -->
+        <div class="post-card skeleton">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-desc"></div>
+        </div>
+        <div class="post-card skeleton">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-desc"></div>
+        </div>
+    </div>
+</section>
+
+<style>
+.features {
+    margin-bottom: 3rem;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: var(--card-background);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.categories-section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.view-all {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.view-all:hover {
+    text-decoration: underline;
+}
+
+/* Skeleton loading */
+.skeleton {
+    animation: pulse 1.5s infinite;
+}
+
+.skeleton-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--border-color);
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+}
+
+.skeleton-text {
+    height: 1rem;
+    background: var(--border-color);
+    border-radius: 4px;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.skeleton-title {
+    height: 1.5rem;
+    background: var(--border-color);
+    border-radius: 4px;
+    width: 70%;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-desc {
+    height: 1rem;
+    background: var(--border-color);
+    border-radius: 4px;
+    width: 100%;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@media (max-width: 768px) {
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

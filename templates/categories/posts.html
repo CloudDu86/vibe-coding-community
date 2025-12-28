@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Vibe Coding互助社区{% endblock %}
+
+{% block content %}
+<div class="category-posts-page">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="/categories">项目分类</a>
+            <span class="separator">/</span>
+            <span class="current">{{ category.name }}</span>
+        </nav>
+        <h1>
+            <span class="category-icon">
+                {% if category.slug == 'web' %}🌐
+                {% elif category.slug == 'app' %}📱
+                {% elif category.slug == 'wechat-mini' %}💬
+                {% elif category.slug == 'desktop' %}🖥️
+                {% elif category.slug == 'backend' %}⚙️
+                {% elif category.slug == 'ai-ml' %}🤖
+                {% else %}📁{% endif %}
+            </span>
+            {{ category.name }}
+        </h1>
+        {% if category.description %}
+        <p class="category-desc">{{ category.description }}</p>
+        {% endif %}
+        <p class="post-count">共 {{ total }} 条求助</p>
+    </div>
+
+    <div class="page-content">
+        <aside class="filters-sidebar">
+            <div class="card filters-card">
+                <h3 class="filter-title">筛选条件</h3>
+
+                <form hx-get="/categories/{{ category.slug }}"
+                      hx-target="#posts-container"
+                      hx-swap="innerHTML"
+                      hx-trigger="change"
+                      class="filter-form">
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select name="status" class="form-select">
+                            <option value="">全部状态</option>
+                            <option value="open" {% if current_status == 'open' %}selected{% endif %}>待解决</option>
+                            <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>进行中</option>
+                            <option value="resolved" {% if current_status == 'resolved' %}selected{% endif %}>已解决</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">紧急程度</label>
+                        <select name="urgency" class="form-select">
+                            <option value="">全部</option>
+                            <option value="urgent" {% if current_urgency == 'urgent' %}selected{% endif %}>紧急</option>
+                            <option value="high" {% if current_urgency == 'high' %}selected{% endif %}>较急</option>
+                            <option value="medium" {% if current_urgency == 'medium' %}selected{% endif %}>一般</option>
+                            <option value="low" {% if current_urgency == 'low' %}selected{% endif %}>不急</option>
+                        </select>
+                    </div>
+
+                    <a href="/categories/{{ category.slug }}" class="btn-outline btn-reset">重置筛选</a>
+                </form>
+            </div>
+
+            <div class="card action-card">
+                <p>在 {{ category.name }} 分类下发布求助</p>
+                <a href="/posts/create?category={{ category.slug }}" class="btn-primary">发布求助</a>
+            </div>
+        </aside>
+
+        <main id="posts-container" class="posts-main">
+            {% if posts %}
+            <div class="posts-list">
+                {% for post in posts %}
+                {% include "posts/partials/post_card.html" %}
+                {% endfor %}
+            </div>
+
+            {% if total_pages > 1 %}
+            <div class="pagination">
+                {% if page > 1 %}
+                <a href="/categories/{{ category.slug }}?page={{ page - 1 }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_urgency %}&urgency={{ current_urgency }}{% endif %}"
+                   class="btn-outline">
+                    上一页
+                </a>
+                {% endif %}
+
+                <span class="page-info">第 {{ page }} / {{ total_pages }} 页</span>
+
+                {% if page < total_pages %}
+                <a href="/categories/{{ category.slug }}?page={{ page + 1 }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_urgency %}&urgency={{ current_urgency }}{% endif %}"
+                   class="btn-outline">
+                    下一页
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="empty-state card">
+                <div class="empty-state-icon">📭</div>
+                <h3>暂无求助帖子</h3>
+                <p>该分类下还没有求助帖子，成为第一个发布者吧！</p>
+                <a href="/posts/create" class="btn-primary">发布求助</a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+
+<style>
+.category-posts-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb .separator {
+    color: var(--text-muted);
+}
+
+.breadcrumb .current {
+    color: var(--text-muted);
+}
+
+.page-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.category-icon {
+    font-size: 2rem;
+}
+
+.category-desc {
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.post-count {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.page-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+}
+
+.filters-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.filters-card {
+    position: sticky;
+    top: 100px;
+}
+
+.filter-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.btn-reset {
+    width: 100%;
+    text-align: center;
+    display: block;
+    margin-top: 1rem;
+}
+
+.action-card {
+    text-align: center;
+}
+
+.action-card p {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.action-card .btn-primary {
+    width: 100%;
+}
+
+.posts-main {
+    min-height: 400px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.page-info {
+    color: var(--text-muted);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state h3 {
+    margin: 1rem 0 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .page-content {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-sidebar {
+        order: 2;
+    }
+
+    .posts-main {
+        order: 1;
+    }
+
+    .filters-card {
+        position: static;
+    }
+}
+</style>
+{% endblock %}

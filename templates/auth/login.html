@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - Vibe Coding互助社区{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <h1 class="auth-title">欢迎回来</h1>
+        <p class="auth-subtitle">登录您的账户</p>
+
+        {% if request.query_params.get('registered') %}
+        <div class="alert alert-success">
+            注册成功！请登录您的账户。
+        </div>
+        {% endif %}
+
+        <div id="login-form-container">
+            {% include "auth/partials/login_form.html" %}
+        </div>
+
+        <div class="auth-footer">
+            <p>还没有账户？ <a href="/auth/register">立即注册</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 2.5rem;
+}
+
+.auth-title {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

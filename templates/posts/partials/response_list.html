@@ -1,0 +1,207 @@
+{% if responses %}
+<div class="responses-list">
+    {% for response in responses %}
+    <div class="response-card card {% if response.status == 'accepted' %}accepted{% endif %}">
+        <div class="response-header">
+            <div class="solver-info">
+                {% if response.profiles %}
+                <a href="/users/{{ response.profiles.id }}" class="solver-name">
+                    {{ response.profiles.nickname }}
+                </a>
+                {% if response.solver_profiles %}
+                <span class="solver-stats">
+                    {% if response.solver_profiles.experience_years %}
+                    {{ response.solver_profiles.experience_years }}年经验
+                    {% endif %}
+                    {% if response.solver_profiles.total_solved %}
+                    · 已解决 {{ response.solver_profiles.total_solved }} 个问题
+                    {% endif %}
+                </span>
+                {% endif %}
+                {% else %}
+                <span class="solver-name">匿名解决者</span>
+                {% endif %}
+            </div>
+            <div class="response-status">
+                {% if response.status == 'pending' %}
+                <span class="status-badge pending">待审核</span>
+                {% elif response.status == 'accepted' %}
+                <span class="status-badge accepted">已接受</span>
+                {% elif response.status == 'rejected' %}
+                <span class="status-badge rejected">已拒绝</span>
+                {% elif response.status == 'completed' %}
+                <span class="status-badge completed">已完成</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="response-content">
+            <p>{{ response.content }}</p>
+        </div>
+
+        {% if response.proposed_solution %}
+        <div class="response-solution">
+            <strong>建议的解决方案:</strong>
+            <p>{{ response.proposed_solution }}</p>
+        </div>
+        {% endif %}
+
+        <div class="response-meta">
+            {% if response.estimated_time %}
+            <span class="meta-item">预计时间: {{ response.estimated_time }}</span>
+            {% endif %}
+            {% if response.proposed_price %}
+            <span class="meta-item price">报价: ¥{{ response.proposed_price }}</span>
+            {% endif %}
+        </div>
+
+        {% if is_author and response.status == 'pending' %}
+        <div class="response-actions">
+            <form action="/responses/{{ response.id }}/accept" method="post" style="display: inline;"
+                  hx-post="/responses/{{ response.id }}/accept"
+                  hx-target="#responses-list"
+                  hx-swap="innerHTML">
+                <button type="submit" class="btn-primary btn-sm">接受方案</button>
+            </form>
+            <form action="/responses/{{ response.id }}/reject" method="post" style="display: inline;"
+                  hx-post="/responses/{{ response.id }}/reject"
+                  hx-target="#responses-list"
+                  hx-swap="innerHTML">
+                <button type="submit" class="btn-outline btn-sm">拒绝</button>
+            </form>
+        </div>
+        {% elif is_author and response.status == 'accepted' %}
+        <div class="response-actions">
+            <form action="/responses/{{ response.id }}/complete" method="post" style="display: inline;">
+                <button type="submit" class="btn-primary btn-sm">标记为已解决</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">💬</div>
+    <p>暂无解决方案</p>
+    <p class="text-muted">成为第一个提供帮助的人</p>
+</div>
+{% endif %}
+
+<style>
+.responses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.response-card {
+    padding: 1.5rem;
+}
+
+.response-card.accepted {
+    border: 2px solid var(--success-color);
+    background: #f0fdf4;
+}
+
+.response-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.solver-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.solver-name {
+    font-weight: 600;
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+.solver-name:hover {
+    color: var(--primary-color);
+}
+
+.solver-stats {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.accepted {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-badge.completed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.response-content {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.response-solution {
+    background: var(--background-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+.response-solution strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.response-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.response-meta .price {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.response-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+</style>

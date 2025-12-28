@@ -1,0 +1,29 @@
+<header class="navbar">
+    <div class="navbar-brand">
+        <a href="/" class="logo">Vibe Coding互助社区</a>
+    </div>
+
+    <nav class="navbar-menu">
+        <a href="/posts" class="nav-link">浏览求助</a>
+        <a href="/categories" class="nav-link">分类</a>
+        {% if user %}
+            <a href="/posts/create" class="nav-link btn-primary">发布求助</a>
+            <div class="dropdown">
+                <button class="dropdown-toggle">{{ user.nickname }}</button>
+                <div class="dropdown-menu">
+                    <a href="/users/profile" class="dropdown-item">个人资料</a>
+                    {% if user.user_role in ['solver', 'both'] %}
+                    <a href="/users/solver/profile" class="dropdown-item">解决者资料</a>
+                    {% endif %}
+                    <hr>
+                    <form action="/auth/logout" method="post">
+                        <button type="submit" class="dropdown-item">退出登录</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <a href="/auth/login" class="nav-link">登录</a>
+            <a href="/auth/register" class="nav-link btn-primary">注册</a>
+        {% endif %}
+    </nav>
+</header>

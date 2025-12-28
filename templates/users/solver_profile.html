@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}解决者资料 - Vibe Coding互助社区{% endblock %}
+
+{% block content %}
+<div class="solver-profile-page">
+    <div class="page-header">
+        <h1>解决者资料</h1>
+        <p class="text-muted">完善您的资料，让求助者更了解您的专业能力</p>
+    </div>
+
+    {% if request.query_params.get('updated') %}
+    <div class="alert alert-success">资料更新成功</div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form action="/users/solver/profile" method="post" class="card">
+        <div class="form-group">
+            <label class="form-label" for="experience_years">工作经验 (年)</label>
+            <input type="number"
+                   id="experience_years"
+                   name="experience_years"
+                   class="form-input"
+                   min="0"
+                   max="50"
+                   value="{{ solver_profile.experience_years or '' }}"
+                   placeholder="0">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="expertise_areas">擅长领域</label>
+            <input type="text"
+                   id="expertise_areas"
+                   name="expertise_areas"
+                   class="form-input"
+                   value="{{ (solver_profile.expertise_areas or [])|join(', ') }}"
+                   placeholder="如: Python, React, 后端开发 (用逗号分隔)">
+            <p class="form-hint">多个领域用逗号分隔</p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="resume">个人履历</label>
+            <textarea id="resume"
+                      name="resume"
+                      class="form-textarea"
+                      rows="6"
+                      placeholder="介绍您的工作经历、项目经验、技术专长等">{{ solver_profile.resume or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="hourly_rate">时薪 (¥/小时)</label>
+            <input type="number"
+                   id="hourly_rate"
+                   name="hourly_rate"
+                   class="form-input"
+                   min="0"
+                   step="0.01"
+                   value="{{ solver_profile.hourly_rate or '' }}"
+                   placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label checkbox-label">
+                <input type="checkbox"
+                       name="is_available"
+                       value="true"
+                       {% if solver_profile.is_available != false %}checked{% endif %}>
+                <span>接受新的求助</span>
+            </label>
+            <p class="form-hint">关闭后，您的资料将不会显示在解决者列表中</p>
+        </div>
+
+        <div class="stats-info">
+            <div class="stat-item">
+                <span class="stat-value">{{ solver_profile.total_solved or 0 }}</span>
+                <span class="stat-label">已解决问题</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ solver_profile.rating or '0.0' }}</span>
+                <span class="stat-label">评分</span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="/users/profile" class="btn-outline">返回</a>
+            <button type="submit" class="btn-primary">保存资料</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.solver-profile-page {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.solver-profile-page .card {
+    padding: 2rem;
+}
+
+.form-hint {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.stats-info {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+</style>
+{% endblock %}
