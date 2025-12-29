@@ -216,7 +216,7 @@ class ResponseService:
     def mark_as_completed(response_id: str, post_author_id: str) -> Tuple[bool, Optional[str]]:
         """标记为已完成"""
         if settings.is_demo_mode:
-            from src.core.mock_data import MOCK_RESPONSES, MOCK_POSTS, MOCK_SOLVER_PROFILES
+            from src.core.mock_data import MOCK_RESPONSES, MOCK_POSTS, MOCK_SOLVER_PROFILES, MOCK_USERS
 
             response = MOCK_RESPONSES.get(response_id)
             if not response:
@@ -233,13 +233,25 @@ class ResponseService:
             if solver_profile:
                 solver_profile["total_solved"] = (solver_profile.get("total_solved") or 0) + 1
 
+            # 发送通知给解决者
+            requester = MOCK_USERS.get(post_author_id, {})
+            MessageService.send_resolved_notification(
+                solver_id=response["solver_id"],
+                requester_id=post_author_id,
+                requester_nickname=requester.get("nickname", "求助者"),
+                post_id=response["post_id"],
+                post_title=post.get("title", ""),
+                response_id=response_id,
+                budget_amount=post.get("budget_amount"),
+            )
+
             return True, None
 
         from src.core.supabase import get_supabase_admin_client
         supabase = get_supabase_admin_client()
 
         try:
-            response = supabase.table("responses").select("*, posts(author_id, id)").eq("id", response_id).single().execute()
+            response = supabase.table("responses").select("*, posts(author_id, id, title, budget_amount)").eq("id", response_id).single().execute()
 
             if not response.data:
                 return False, "回复不存在"
@@ -250,6 +262,9 @@ class ResponseService:
             supabase.table("responses").update({"status": "completed"}).eq("id", response_id).execute()
 
             post_id = response.data.get("posts", {}).get("id")
+            post_title = response.data.get("posts", {}).get("title", "")
+            budget_amount = response.data.get("posts", {}).get("budget_amount")
+
             if post_id:
                 supabase.table("posts").update({"status": "resolved"}).eq("id", post_id).execute()
 
@@ -259,6 +274,20 @@ class ResponseService:
                 if solver.data:
                     new_count = (solver.data.get("total_solved") or 0) + 1
                     supabase.table("solver_profiles").update({"total_solved": new_count}).eq("user_id", solver_id).execute()
+
+                # 发送通知给解决者
+                requester_info = supabase.table("profiles").select("nickname").eq("id", post_author_id).single().execute()
+                requester_nickname = requester_info.data.get("nickname", "求助者") if requester_info.data else "求助者"
+
+                MessageService.send_resolved_notification(
+                    solver_id=solver_id,
+                    requester_id=post_author_id,
+                    requester_nickname=requester_nickname,
+                    post_id=post_id,
+                    post_title=post_title,
+                    response_id=response_id,
+                    budget_amount=budget_amount,
+                )
 
             return True, None
 
@@ -274,7 +303,7 @@ class ResponseService:
     ) -> Tuple[bool, Optional[str]]:
         """更新解决方案，状态改为待审核"""
         if settings.is_demo_mode:
-            from src.core.mock_data import MOCK_RESPONSES
+            from src.core.mock_data import MOCK_RESPONSES, MOCK_POSTS, MOCK_USERS
 
             response = MOCK_RESPONSES.get(response_id)
             if not response:
@@ -285,13 +314,30 @@ class ResponseService:
             response["proposed_solution"] = solution
             response["attachment_url"] = attachment_url
             response["status"] = "pending_review"  # 改为待审核状态
+
+            # 发送通知给求助者
+            post = MOCK_POSTS.get(response["post_id"])
+            solver = MOCK_USERS.get(solver_id, {})
+            if post:
+                MessageService.send_pending_review_notification(
+                    requester_id=post["author_id"],
+                    solver_id=solver_id,
+                    solver_nickname=solver.get("nickname", "解决者"),
+                    post_id=response["post_id"],
+                    post_title=post.get("title", ""),
+                    response_id=response_id,
+                )
+
             return True, None
 
         from src.core.supabase import get_supabase_admin_client
         supabase = get_supabase_admin_client()
 
         try:
-            response = supabase.table("responses").select("solver_id").eq("id", response_id).single().execute()
+            # 获取回复信息，包含帖子信息
+            response = supabase.table("responses").select(
+                "solver_id, post_id, posts(author_id, title)"
+            ).eq("id", response_id).single().execute()
 
             if not response.data:
                 return False, "回复不存在"
@@ -307,6 +353,23 @@ class ResponseService:
                 update_data["attachment_url"] = attachment_url
 
             supabase.table("responses").update(update_data).eq("id", response_id).execute()
+
+            # 发送通知给求助者
+            post_data = response.data.get("posts", {})
+            post_id = response.data.get("post_id")
+            if post_data and post_id:
+                solver_info = supabase.table("profiles").select("nickname").eq("id", solver_id).single().execute()
+                solver_nickname = solver_info.data.get("nickname", "解决者") if solver_info.data else "解决者"
+
+                MessageService.send_pending_review_notification(
+                    requester_id=post_data.get("author_id"),
+                    solver_id=solver_id,
+                    solver_nickname=solver_nickname,
+                    post_id=post_id,
+                    post_title=post_data.get("title", ""),
+                    response_id=response_id,
+                )
+
             return True, None
 
         except Exception as e:

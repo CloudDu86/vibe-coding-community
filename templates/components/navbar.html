@@ -1,26 +1,34 @@
 <header class="navbar">
     <div class="navbar-brand">
-        <a href="/" class="logo">AI创造互助社区</a>
+        <a href="/" class="logo" preload="mouseenter">AI生成社区</a>
     </div>
 
     <nav class="navbar-menu">
-        <a href="/categories" class="nav-link">分类</a>
+        <a href="/categories" class="nav-link" preload="mouseenter">分类</a>
         {% if user %}
             {% if user.user_role != 'solver' %}
-            <a href="/posts/create" class="nav-link btn-primary">发布求助</a>
+            <a href="/posts/create" class="nav-link btn-primary" preload="mouseenter">发布求助</a>
             {% endif %}
+
+            <!-- 消息图标 -->
+            <a href="/messages" class="nav-link message-icon-link"
+               hx-get="/messages/unread-count"
+               hx-trigger="load, every 30s"
+               hx-swap="innerHTML"
+               preload="mouseenter">
+                <span class="icon">🔔</span>
+            </a>
 
             <div class="dropdown user-dropdown">
                 <button class="dropdown-toggle nav-link">{{ user.nickname }}</button>
                 <div class="dropdown-menu">
-                    <a href="/users/profile" class="dropdown-item">个人资料</a>
+                    <a href="/users/profile" class="dropdown-item" preload="mouseenter">个人资料</a>
                     {% if user.user_role != 'solver' %}
-                    <a href="/users/my-posts" class="dropdown-item">我的求助单</a>
+                    <a href="/users/my-posts" class="dropdown-item" preload="mouseenter">我的求助单</a>
                     {% endif %}
                     {% if user.user_role in ['solver', 'both'] %}
-                    <a href="/users/my-orders" class="dropdown-item">我接的单子</a>
+                    <a href="/users/my-orders" class="dropdown-item" preload="mouseenter">我接的单子</a>
                     {% endif %}
-                    <a href="/messages" class="dropdown-item">消息中心</a>
                     <hr>
                     <form action="/auth/logout" method="post">
                         <button type="submit" class="dropdown-item">退出登录</button>
@@ -28,8 +36,8 @@
                 </div>
             </div>
         {% else %}
-            <a href="/auth/login" class="nav-link">登录</a>
-            <a href="/auth/register" class="nav-link btn-primary">注册</a>
+            <a href="/auth/login" class="nav-link" preload="mouseenter">登录</a>
+            <a href="/auth/register" class="nav-link btn-primary" preload="mouseenter">注册</a>
         {% endif %}
     </nav>
 </header>
@@ -42,5 +50,34 @@
 
 .user-dropdown .dropdown-item {
     font-size: 1rem;
+}
+
+/* 消息图标样式 */
+.message-icon-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+}
+
+.message-icon-link .icon {
+    font-size: 1.25rem;
+}
+
+.message-icon-link .badge {
+    position: absolute;
+    top: 0;
+    right: -2px;
+    background: var(--danger-color);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
 }
 </style>

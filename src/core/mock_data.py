@@ -37,6 +37,9 @@ MOCK_SOLVER_PROFILES: Dict[str, dict] = {
     }
 }
 
+# 模拟用户协议同意记录
+MOCK_AGREEMENTS: Dict[str, dict] = {}
+
 # 模拟分类数据
 MOCK_CATEGORIES: List[dict] = [
     {"id": "cat-1", "name": "网页开发", "slug": "web", "description": "网站、Web应用相关问题", "display_order": 1, "is_active": True},

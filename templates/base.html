@@ -3,12 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AI创造互助社区{% endblock %}</title>
+    <title>{% block title %}AI生成社区{% endblock %}</title>
     <script src="/static/js/htmx.min.js"></script>
+    <script src="/static/js/htmx-preload.js" defer></script>
     <link rel="stylesheet" href="/static/css/styles.css">
     {% block extra_head %}{% endblock %}
+    <style>
+        /* 顶部进度条 */
+        #page-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), #818cf8);
+            width: 0%;
+            z-index: 9999;
+            transition: width 0.2s ease;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+        #page-progress.loading {
+            animation: progress-loading 1s ease-in-out infinite;
+        }
+        @keyframes progress-loading {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 90%; }
+        }
+        #page-progress.done {
+            width: 100%;
+            opacity: 0;
+            transition: width 0.2s ease, opacity 0.3s ease 0.2s;
+        }
+        /* 页面内容过渡 */
+        main.container {
+            transition: opacity 0.15s ease;
+        }
+        main.container.htmx-request {
+            opacity: 0.6;
+        }
+        /* 平滑视图过渡 */
+        .htmx-swapping {
+            opacity: 0;
+            transition: opacity 0.1s ease-out;
+        }
+        .htmx-settling {
+            opacity: 1;
+            transition: opacity 0.15s ease-in;
+        }
+    </style>
 </head>
-<body hx-boost="true">
+<body hx-boost="true" hx-indicator="#page-progress" hx-ext="preload">
+    <!-- 顶部进度条 -->
+    <div id="page-progress"></div>
+
     {% include "components/navbar.html" %}
 
     <main class="container">
@@ -20,6 +67,28 @@
     <!-- Toast 通知容器 -->
     <div id="toast-container"></div>
 
+    <script>
+        // 进度条控制
+        document.body.addEventListener('htmx:beforeRequest', function(e) {
+            document.getElementById('page-progress').className = 'loading';
+        });
+        document.body.addEventListener('htmx:afterRequest', function(e) {
+            const progress = document.getElementById('page-progress');
+            progress.className = 'done';
+            setTimeout(() => { progress.className = ''; }, 500);
+        });
+        // 链接预加载 - 鼠标悬停时预取
+        document.addEventListener('mouseover', function(e) {
+            const link = e.target.closest('a[href^="/"]');
+            if (link && !link.dataset.prefetched && !link.hasAttribute('hx-get')) {
+                link.dataset.prefetched = 'true';
+                const prefetch = document.createElement('link');
+                prefetch.rel = 'prefetch';
+                prefetch.href = link.href;
+                document.head.appendChild(prefetch);
+            }
+        });
+    </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

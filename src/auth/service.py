@@ -10,10 +10,16 @@ class AuthService:
     """认证服务"""
 
     @staticmethod
-    def sign_up(email: str, password: str, nickname: str, user_role: str) -> Tuple[bool, Optional[str], Optional[dict]]:
+    def sign_up(
+        email: str,
+        password: str,
+        nickname: str,
+        user_role: str,
+        terms_agreed_at: Optional[str] = None,
+    ) -> Tuple[bool, Optional[str], Optional[dict]]:
         """用户注册"""
         if settings.is_demo_mode:
-            from src.core.mock_data import MOCK_USERS, MOCK_SOLVER_PROFILES
+            from src.core.mock_data import MOCK_USERS, MOCK_SOLVER_PROFILES, MOCK_AGREEMENTS
 
             # 检查邮箱是否已存在
             for user in MOCK_USERS.values():
@@ -34,8 +40,18 @@ class AuthService:
                 "bio": None,
                 "created_at": datetime.now().isoformat(),
                 "password_hash": hashlib.sha256(password.encode()).hexdigest(),
+                "terms_agreed_at": terms_agreed_at,
             }
             MOCK_USERS[user_id] = new_user
+
+            # 记录协议同意存档
+            if terms_agreed_at:
+                MOCK_AGREEMENTS[user_id] = {
+                    "user_id": user_id,
+                    "email": email,
+                    "agreed_at": terms_agreed_at,
+                    "agreement_version": "1.0",
+                }
 
             if user_role in ["solver", "both"]:
                 MOCK_SOLVER_PROFILES[user_id] = {
@@ -72,11 +88,28 @@ class AuthService:
 
             user_id = auth_response.user.id
             admin_client = get_supabase_admin_client()
-            admin_client.table("profiles").insert({
+
+            # 创建用户资料，包含协议同意时间
+            profile_data = {
                 "id": user_id,
                 "nickname": nickname,
                 "user_role": user_role,
-            }).execute()
+            }
+            if terms_agreed_at:
+                profile_data["terms_agreed_at"] = terms_agreed_at
+
+            admin_client.table("profiles").insert(profile_data).execute()
+
+            # 记录协议同意存档
+            if terms_agreed_at:
+                try:
+                    admin_client.table("user_agreements").insert({
+                        "user_id": user_id,
+                        "agreed_at": terms_agreed_at,
+                        "agreement_version": "1.0",
+                    }).execute()
+                except Exception:
+                    pass  # 如果表不存在则忽略
 
             if user_role in ["solver", "both"]:
                 admin_client.table("solver_profiles").insert({

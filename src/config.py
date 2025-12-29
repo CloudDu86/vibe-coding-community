@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     """应用配置"""
 
     # 应用设置
-    APP_NAME: str = "AI创造互助社区"
+    APP_NAME: str = "AI生成社区"
     DEBUG: bool = True
 
     # 演示模式（无需 Supabase）

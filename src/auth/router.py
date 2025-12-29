@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -8,6 +9,11 @@ from src.auth.dependencies import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent.parent / "templates")
+
+
+def get_agreement_date() -> str:
+    """获取协议生效日期（当前日期）"""
+    return datetime.now().strftime("%Y年%m月%d日")
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -81,7 +87,7 @@ async def register_page(request: Request, user: dict = Depends(get_current_user)
 
     return templates.TemplateResponse(
         "auth/register.html",
-        {"request": request, "title": "注册"},
+        {"request": request, "title": "注册", "agreement_date": get_agreement_date()},
     )
 
 
@@ -92,30 +98,50 @@ async def register(
     password: str = Form(...),
     nickname: str = Form(...),
     user_role: str = Form(...),
+    agree_terms: str = Form(None),
 ):
     """处理注册"""
-    # 验证角色
-    if user_role not in ["asker", "solver", "both"]:
-        error = "请选择有效的用户角色"
+    agreement_date = get_agreement_date()
+
+    # 验证是否同意协议
+    if not agree_terms:
+        error = "请阅读并同意用户协议"
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(
+                "auth/partials/register_form.html",
+                {"request": request, "error": error, "email": email, "nickname": nickname, "agreement_date": agreement_date},
+            )
         return templates.TemplateResponse(
             "auth/register.html",
-            {"request": request, "title": "注册", "error": error},
-            status_code=400,
+            {"request": request, "title": "注册", "error": error, "agreement_date": agreement_date},
         )
 
-    success, error, user_data = AuthService.sign_up(email, password, nickname, user_role)
+    # 验证角色（不允许双重身份）
+    if user_role not in ["asker", "solver"]:
+        error = "请选择有效的用户身份"
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(
+                "auth/partials/register_form.html",
+                {"request": request, "error": error, "email": email, "nickname": nickname, "agreement_date": agreement_date},
+            )
+        return templates.TemplateResponse(
+            "auth/register.html",
+            {"request": request, "title": "注册", "error": error, "agreement_date": agreement_date},
+        )
+
+    # 记录同意协议的时间
+    agreed_at = datetime.now().isoformat()
+    success, error, user_data = AuthService.sign_up(email, password, nickname, user_role, agreed_at)
 
     if not success:
         if request.headers.get("HX-Request"):
             return templates.TemplateResponse(
                 "auth/partials/register_form.html",
-                {"request": request, "error": error, "email": email, "nickname": nickname},
-                status_code=400,
+                {"request": request, "error": error, "email": email, "nickname": nickname, "agreement_date": agreement_date},
             )
         return templates.TemplateResponse(
             "auth/register.html",
-            {"request": request, "title": "注册", "error": error, "email": email, "nickname": nickname},
-            status_code=400,
+            {"request": request, "title": "注册", "error": error, "email": email, "nickname": nickname, "agreement_date": agreement_date},
         )
 
     # 注册成功，重定向到登录页

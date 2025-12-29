@@ -1,6 +1,7 @@
 {% if error %}
-<div class="alert alert-error">
-    {{ error }}
+<div class="alert alert-error register-error">
+    <span class="error-icon">⚠️</span>
+    <span class="error-text">{{ error }}</span>
 </div>
 {% endif %}
 
@@ -47,25 +48,25 @@
             <label class="role-option">
                 <input type="radio" name="user_role" value="asker" required>
                 <div class="role-info">
-                    <div class="role-title">求助者</div>
-                    <div class="role-desc">我是编程新手，需要专家帮助解决AI编程问题</div>
+                    <div class="role-title">需求端（求助者）</div>
+                    <div class="role-desc">我需要专家帮助解决AI编程问题</div>
                 </div>
             </label>
             <label class="role-option">
                 <input type="radio" name="user_role" value="solver">
                 <div class="role-info">
-                    <div class="role-title">解决者</div>
+                    <div class="role-title">供给端（解决者）</div>
                     <div class="role-desc">我有编程经验，想帮助他人解决问题并获得报酬</div>
                 </div>
             </label>
-            <label class="role-option">
-                <input type="radio" name="user_role" value="both">
-                <div class="role-info">
-                    <div class="role-title">两者都是</div>
-                    <div class="role-desc">我既可以求助也可以帮助他人</div>
-                </div>
-            </label>
         </div>
+    </div>
+
+    <div class="form-group agreement-group">
+        <label class="agreement-label">
+            <input type="checkbox" name="agree_terms" id="agree_terms" required>
+            <span>我已阅读并同意 <a href="#" class="agreement-link" onclick="openAgreementModal(event)">《用户注册与平台服务协议》</a></span>
+        </label>
     </div>
 
     <button type="submit" class="btn-primary btn-full">
@@ -74,7 +75,64 @@
     </button>
 </form>
 
+<!-- 社交登录分隔线 -->
+<div class="social-login-divider">
+    <span>或</span>
+</div>
+
+<!-- 微信注册按钮 -->
+<button type="button" class="btn-wechat btn-full" onclick="wechatRegister()">
+    <svg class="wechat-icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M9.5,4C5.36,4 2,6.69 2,10C2,11.89 3.08,13.56 4.78,14.66L4,17L6.5,15.5C7.39,15.81 8.37,16 9.41,16C9.15,15.37 9,14.7 9,14C9,10.69 12.13,8 16,8C16.19,8 16.38,8 16.56,8.03C15.54,5.69 12.78,4 9.5,4M6.5,6.5A1,1 0 0,1 7.5,7.5A1,1 0 0,1 6.5,8.5A1,1 0 0,1 5.5,7.5A1,1 0 0,1 6.5,6.5M11.5,6.5A1,1 0 0,1 12.5,7.5A1,1 0 0,1 11.5,8.5A1,1 0 0,1 10.5,7.5A1,1 0 0,1 11.5,6.5M16,9C12.69,9 10,11.24 10,14C10,16.76 12.69,19 16,19C16.67,19 17.31,18.92 17.91,18.75L20,20L19.38,18.13C20.95,17.22 22,15.71 22,14C22,11.24 19.31,9 16,9M14,11.5A1,1 0 0,1 15,12.5A1,1 0 0,1 14,13.5A1,1 0 0,1 13,12.5A1,1 0 0,1 14,11.5M18,11.5A1,1 0 0,1 19,12.5A1,1 0 0,1 18,13.5A1,1 0 0,1 17,12.5A1,1 0 0,1 18,11.5Z"/>
+    </svg>
+    <span>微信快速注册</span>
+</button>
+
+<!-- 用户协议弹窗 -->
+<div id="agreement-modal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeAgreementModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>用户协议</h3>
+            <button class="modal-close" onclick="closeAgreementModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="agreement-body">
+            {% include "auth/user_agreement.html" %}
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" onclick="agreeAndClose()">我已阅读并同意</button>
+        </div>
+    </div>
+</div>
+
 <style>
+/* 错误提示样式 */
+.register-error {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #fef2f2;
+    border: 2px solid #f87171;
+    border-radius: var(--border-radius);
+    animation: shake 0.5s ease-in-out;
+}
+
+.register-error .error-icon {
+    font-size: 1.25rem;
+}
+
+.register-error .error-text {
+    font-weight: 500;
+    color: #b91c1c;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
 .btn-full {
     width: 100%;
     padding: 0.75rem;
@@ -93,4 +151,185 @@
 .htmx-request .btn-text {
     display: none;
 }
+
+/* 协议同意样式 */
+.agreement-group {
+    margin-top: 1rem;
+}
+
+.agreement-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.agreement-label input[type="checkbox"] {
+    margin-top: 0.2rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+.agreement-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.agreement-link:hover {
+    text-decoration: underline;
+}
+
+/* 弹窗样式 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: var(--text-color);
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.modal-footer .btn-primary {
+    min-width: 200px;
+}
+
+/* 社交登录分隔线 */
+.social-login-divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+}
+
+.social-login-divider::before,
+.social-login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.social-login-divider span {
+    padding: 0 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* 微信登录按钮 */
+.btn-wechat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #07C160;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-wechat:hover {
+    background: #06AE56;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(7, 193, 96, 0.3);
+}
+
+.btn-wechat:active {
+    transform: translateY(0);
+}
+
+.wechat-icon {
+    flex-shrink: 0;
+}
 </style>
+
+<script>
+function openAgreementModal(event) {
+    event.preventDefault();
+    document.getElementById('agreement-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAgreementModal() {
+    document.getElementById('agreement-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function agreeAndClose() {
+    document.getElementById('agree_terms').checked = true;
+    closeAgreementModal();
+}
+
+// ESC 关闭弹窗
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAgreementModal();
+    }
+});
+
+function wechatRegister() {
+    alert('微信注册功能即将上线，敬请期待！');
+}
+</script>

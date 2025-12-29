@@ -212,3 +212,56 @@ class MessageService:
             related_response_id=response_id,
         )
         return success, error
+
+    @staticmethod
+    def send_resolved_notification(
+        solver_id: str,
+        requester_id: str,
+        requester_nickname: str,
+        post_id: str,
+        post_title: str,
+        response_id: str,
+        budget_amount: Optional[float] = None,
+    ) -> Tuple[bool, Optional[str]]:
+        """发送问题已解决通知给解决者"""
+        content = f"求助者 {requester_nickname} 已确认您的解决方案有效，问题「{post_title}」已标记为解决！\n\n"
+
+        if budget_amount:
+            content += f"预算金额：¥{budget_amount:.2f}\n\n"
+
+        content += "感谢您的帮助，请与求助者联系获取报酬。"
+
+        success, error, _ = MessageService.create_message(
+            recipient_id=solver_id,
+            sender_id=requester_id,
+            message_type="system",
+            title="恭喜！您解决的问题已被确认",
+            content=content,
+            related_post_id=post_id,
+            related_response_id=response_id,
+        )
+        return success, error
+
+    @staticmethod
+    def send_pending_review_notification(
+        requester_id: str,
+        solver_id: str,
+        solver_nickname: str,
+        post_id: str,
+        post_title: str,
+        response_id: str,
+    ) -> Tuple[bool, Optional[str]]:
+        """发送解决方案待审核通知给求助者"""
+        content = f"解决者 {solver_nickname} 已提交了问题「{post_title}」的解决方案，请您审核确认。\n\n"
+        content += "如果问题已解决，请点击「问题已解决」按钮确认。"
+
+        success, error, _ = MessageService.create_message(
+            recipient_id=requester_id,
+            sender_id=solver_id,
+            message_type="system",
+            title="解决方案已提交，请审核",
+            content=content,
+            related_post_id=post_id,
+            related_response_id=response_id,
+        )
+        return success, error
