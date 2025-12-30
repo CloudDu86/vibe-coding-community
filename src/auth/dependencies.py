@@ -93,3 +93,33 @@ async def require_asker(user: dict = Depends(require_auth)) -> dict:
             detail="需要求助者权限",
         )
     return user
+
+
+async def require_verified(user: dict = Depends(require_auth)) -> dict:
+    """要求用户已完成实名认证"""
+    if not user.get("id_card_verified"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要完成实名认证才能执行此操作",
+            headers={"HX-Redirect": "/auth/verify"},
+        )
+    return user
+
+
+async def require_verified_solver(user: dict = Depends(require_verified)) -> dict:
+    """要求用户是已实名认证的解决者"""
+    if user.get("user_role") not in ["solver", "both"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要解决者权限",
+        )
+
+    # 检查是否填写了微信号
+    if not user.get("wechat_id") or not user.get("wechat_id").strip():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="接单前需要先在个人资料中填写微信号，用于与求助者沟通",
+            headers={"HX-Redirect": "/users/profile"},
+        )
+
+    return user

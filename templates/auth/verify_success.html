@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}认证成功 - AI生成社区{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <h1 class="auth-title">{{ message or '认证成功' }}</h1>
+        <p class="auth-subtitle">您的实名认证已完成</p>
+
+        <div class="verify-info">
+            <div class="info-item">
+                <span class="info-label">认证姓名</span>
+                <span class="info-value">{{ real_name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">认证状态</span>
+                <span class="info-value status-verified">已认证</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/posts/create" class="btn-primary">发布求助</a>
+            <a href="/posts" class="btn-secondary">浏览帖子</a>
+        </div>
+
+        <div class="auth-footer">
+            <a href="/users/profile">返回个人中心</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 2.5rem;
+    text-align: center;
+}
+
+.success-icon {
+    color: #10b981;
+    margin-bottom: 1.5rem;
+}
+
+.auth-title {
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.verify-info {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--text-muted);
+}
+
+.info-value {
+    font-weight: 500;
+}
+
+.status-verified {
+    color: #10b981;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.action-buttons a {
+    flex: 1;
+    padding: 0.875rem;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.auth-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    color: var(--primary-color);
+}
+</style>
+{% endblock %}

@@ -19,7 +19,7 @@ class AuthService:
     ) -> Tuple[bool, Optional[str], Optional[dict]]:
         """用户注册"""
         if settings.is_demo_mode:
-            from src.core.mock_data import MOCK_USERS, MOCK_SOLVER_PROFILES, MOCK_AGREEMENTS
+            from src.core.mock_data import MOCK_USERS, MOCK_SOLVER_PROFILES, MOCK_AGREEMENTS, save_users
 
             # 检查邮箱是否已存在
             for user in MOCK_USERS.values():
@@ -65,6 +65,10 @@ class AuthService:
                     "total_solved": 0,
                     "is_available": True,
                 }
+
+            # 保存用户数据到文件
+            save_users()
+            print(f"[Auth] User registered and saved: {email}")
 
             return True, None, {
                 "id": user_id,
@@ -147,7 +151,11 @@ class AuthService:
 
             # 验证密码（演示模式简化处理）
             password_hash = hashlib.sha256(password.encode()).hexdigest()
+            print(f"[Debug] Login attempt - Email: {email}")
+            print(f"[Debug] User password_hash: {user.get('password_hash')}")
+            print(f"[Debug] Input password_hash: {password_hash}")
             if user.get("password_hash") and user["password_hash"] != password_hash:
+                print(f"[Debug] Password mismatch!")
                 return False, "邮箱或密码错误", None
 
             # 创建演示 token

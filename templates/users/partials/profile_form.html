@@ -40,13 +40,17 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label" for="wechat_id">微信号</label>
+        <label class="form-label" for="wechat_id">微信号 {% if user.user_role in ['solver', 'both'] %}<span class="required">*</span>{% endif %}</label>
         <input type="text"
                id="wechat_id"
                name="wechat_id"
                class="form-input"
                value="{{ user.wechat_id or '' }}"
-               placeholder="方便与求助者/解决者沟通">
+               placeholder="方便与求助者/解决者沟通"
+               {% if user.user_role in ['solver', 'both'] %}required{% endif %}>
+        {% if user.user_role in ['solver', 'both'] %}
+        <small class="form-hint">解决者接单时需要提供微信号与求助者沟通</small>
+        {% endif %}
     </div>
 
     <div class="form-info">
@@ -71,6 +75,13 @@
 <style>
 .required {
     color: var(--danger-color);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 
 .form-info {

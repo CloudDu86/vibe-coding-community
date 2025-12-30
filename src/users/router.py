@@ -1,10 +1,13 @@
 from pathlib import Path
+import hashlib
 from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from src.auth.dependencies import get_current_user, require_auth
+from src.auth.wechat_oauth import UserIdentityService
 from src.core.supabase import get_supabase_client
+from src.config import settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent.parent / "templates")
@@ -13,9 +16,28 @@ templates = Jinja2Templates(directory=Path(__file__).resolve().parent.parent.par
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(request: Request, user: dict = Depends(require_auth)):
     """个人资料页面"""
+    # 获取用户的身份绑定信息
+    identities = UserIdentityService.get_user_identities(user["id"])
+
+    # 查找微信绑定
+    wechat_identity = None
+    for identity in identities:
+        if identity.get("provider") == "wechat":
+            wechat_identity = identity
+            break
+
+    # 判断是否可以解绑微信（必须有邮箱或其他登录方式）
+    can_unbind_wechat = bool(user.get("email"))
+
     return templates.TemplateResponse(
         "users/profile.html",
-        {"request": request, "title": "个人资料", "user": user},
+        {
+            "request": request,
+            "title": "个人资料",
+            "user": user,
+            "wechat_identity": wechat_identity,
+            "can_unbind_wechat": can_unbind_wechat,
+        },
     )
 
 
@@ -85,6 +107,53 @@ async def update_profile(
     user: dict = Depends(require_auth),
 ):
     """更新个人资料"""
+    # 调试：打印接收到的数据
+    print(f"[ProfileUpdate] User: {user.get('email')}, Role: {user.get('user_role')}")
+    print(f"[ProfileUpdate] Nickname: '{nickname}', WeChat ID: '{wechat_id}', Bio: '{bio}', Phone: '{phone}'")
+
+    # 验证微信号（solver和both角色必填）
+    if user.get("user_role") in ["solver", "both"]:
+        if not wechat_id or not wechat_id.strip():
+            error = "解决者必须填写微信号，用于与求助者沟通"
+            print(f"[ProfileUpdate] Validation failed: WeChat ID is empty")
+            if request.headers.get("HX-Request"):
+                return templates.TemplateResponse(
+                    "users/partials/profile_form.html",
+                    {"request": request, "user": user, "error": error},
+                    status_code=200,
+                )
+            return templates.TemplateResponse(
+                "users/profile.html",
+                {"request": request, "title": "个人资料", "user": user, "error": error},
+                status_code=400,
+            )
+
+    # 演示模式
+    if settings.is_demo_mode:
+        from src.core.mock_data import MOCK_USERS, save_users
+
+        if user["id"] in MOCK_USERS:
+            MOCK_USERS[user["id"]]["nickname"] = nickname
+            MOCK_USERS[user["id"]]["bio"] = bio
+            MOCK_USERS[user["id"]]["phone"] = phone
+            MOCK_USERS[user["id"]]["wechat_id"] = wechat_id
+            save_users()
+
+        # 更新 user 对象
+        user["nickname"] = nickname
+        user["bio"] = bio
+        user["phone"] = phone
+        user["wechat_id"] = wechat_id
+
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(
+                "users/partials/profile_form.html",
+                {"request": request, "user": user, "success": "资料更新成功"},
+            )
+
+        return RedirectResponse(url="/users/profile?updated=true", status_code=303)
+
+    # Supabase 模式
     supabase = get_supabase_client()
 
     try:
@@ -115,7 +184,7 @@ async def update_profile(
             return templates.TemplateResponse(
                 "users/partials/profile_form.html",
                 {"request": request, "user": user, "error": error},
-                status_code=400,
+                status_code=200,
             )
         return templates.TemplateResponse(
             "users/profile.html",
@@ -177,6 +246,75 @@ async def update_solver_profile(
             {"request": request, "title": "解决者资料", "user": user, "error": str(e)},
             status_code=400,
         )
+
+
+@router.post("/bind/email")
+async def bind_email(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    password_confirm: str = Form(...),
+    user: dict = Depends(require_auth),
+):
+    """绑定邮箱"""
+    # 验证密码
+    if password != password_confirm:
+        return RedirectResponse(url="/users/profile?error=passwords_not_match", status_code=303)
+
+    if len(password) < 6:
+        return RedirectResponse(url="/users/profile?error=password_too_short", status_code=303)
+
+    if settings.is_demo_mode:
+        from src.core.mock_data import MOCK_USERS
+
+        # 检查邮箱是否已被使用
+        for u in MOCK_USERS.values():
+            if u.get("email") == email and u["id"] != user["id"]:
+                return RedirectResponse(url="/users/profile?error=email_exists", status_code=303)
+
+        # 更新用户邮箱和密码
+        if user["id"] in MOCK_USERS:
+            MOCK_USERS[user["id"]]["email"] = email
+            MOCK_USERS[user["id"]]["password_hash"] = hashlib.sha256(password.encode()).hexdigest()
+
+        # 创建邮箱身份绑定
+        UserIdentityService.create_identity(
+            user_id=user["id"],
+            provider=UserIdentityService.PROVIDER_EMAIL,
+            provider_user_id=email,
+        )
+
+        return RedirectResponse(url="/users/profile?bind_success=true", status_code=303)
+
+    # Supabase模式 - 待实现
+    return RedirectResponse(url="/users/profile?error=not_implemented", status_code=303)
+
+
+@router.post("/unbind/wechat")
+async def unbind_wechat(
+    request: Request,
+    user: dict = Depends(require_auth),
+):
+    """解绑微信"""
+    # 必须有邮箱才能解绑微信
+    if not user.get("email"):
+        return RedirectResponse(url="/users/profile?error=need_email_first", status_code=303)
+
+    # 查找微信绑定
+    identities = UserIdentityService.get_user_identities(user["id"])
+    wechat_identity = None
+    for identity in identities:
+        if identity.get("provider") == "wechat":
+            wechat_identity = identity
+            break
+
+    if not wechat_identity:
+        return RedirectResponse(url="/users/profile?error=no_wechat_binding", status_code=303)
+
+    # 删除绑定
+    UserIdentityService.delete_identity(wechat_identity["id"])
+
+    return RedirectResponse(url="/users/profile?unbind_success=true", status_code=303)
 
 
 @router.get("/{user_id}", response_class=HTMLResponse)

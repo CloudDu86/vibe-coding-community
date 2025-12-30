@@ -6,8 +6,13 @@
     <nav class="navbar-menu">
         <a href="/categories" class="nav-link" preload="mouseenter">分类</a>
         {% if user %}
-            {% if user.user_role != 'solver' %}
+            {% if user.user_role == 'asker' %}
             <a href="/posts/create" class="nav-link btn-primary" preload="mouseenter">发布求助</a>
+            {% elif user.user_role == 'solver' %}
+            <a href="/posts" class="nav-link btn-primary" preload="mouseenter">浏览订单</a>
+            {% elif user.user_role == 'both' %}
+            <a href="/posts/create" class="nav-link btn-secondary" preload="mouseenter">发布求助</a>
+            <a href="/posts" class="nav-link btn-primary" preload="mouseenter">浏览订单</a>
             {% endif %}
 
             <!-- 消息图标 -->

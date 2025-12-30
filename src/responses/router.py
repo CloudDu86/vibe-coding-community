@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Form, Depends, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from src.auth.dependencies import get_current_user, require_auth, require_solver
+from src.auth.dependencies import get_current_user, require_auth, require_solver, require_verified_solver
 from src.responses.service import ResponseService
 from src.posts.service import PostService
 
@@ -25,7 +25,7 @@ async def create_response(
     proposed_solution: str = Form(None),
     estimated_time: str = Form(None),
     proposed_price: float = Form(None),
-    user: dict = Depends(require_solver),
+    user: dict = Depends(require_verified_solver),
 ):
     """创建回复"""
     # 检查帖子是否存在

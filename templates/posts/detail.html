@@ -132,7 +132,7 @@
 
         <!-- 接单表单 (仅对解决者显示，且帖子状态为open) -->
         {% if post.status == 'open' %}
-            {% if user and user.user_role in ['solver', 'both'] and not is_author %}
+            {% if user and user.user_role in ['solver', 'both'] and not is_author and user.id_card_verified %}
             <div class="response-form-section card">
                 <h3>接这个单子</h3>
                 <form action="/responses/posts/{{ post.id }}/respond" method="post"
@@ -147,6 +147,10 @@
 
                     <button type="submit" class="btn-primary">接单子</button>
                 </form>
+            </div>
+            {% elif user and not user.id_card_verified and user.user_role in ["solver", "both"] and not is_author %}
+            <div class="alert alert-warning">
+                接单需要先完成 <a href="/auth/verify">实名认证</a>
             </div>
             {% elif not user %}
             <div class="alert alert-warning">

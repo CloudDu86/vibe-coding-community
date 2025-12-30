@@ -12,12 +12,109 @@
     <div class="alert alert-success">资料更新成功</div>
     {% endif %}
 
+    {% if request.query_params.get('bind_success') %}
+    <div class="alert alert-success">绑定成功</div>
+    {% endif %}
+
+    {% if request.query_params.get('unbind_success') %}
+    <div class="alert alert-success">解绑成功</div>
+    {% endif %}
+
+    <!-- 账户绑定区域 -->
+    <div class="card account-bindings-card">
+        <h2 class="card-title">账户绑定</h2>
+        <p class="card-subtitle">绑定多种登录方式，方便快捷登录</p>
+
+        <div class="binding-list">
+            <!-- 微信绑定 -->
+            <div class="binding-item">
+                <div class="binding-icon wechat-icon-box">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M9.5,4C5.36,4 2,6.69 2,10C2,11.89 3.08,13.56 4.78,14.66L4,17L6.5,15.5C7.39,15.81 8.37,16 9.41,16C9.15,15.37 9,14.7 9,14C9,10.69 12.13,8 16,8C16.19,8 16.38,8 16.56,8.03C15.54,5.69 12.78,4 9.5,4M6.5,6.5A1,1 0 0,1 7.5,7.5A1,1 0 0,1 6.5,8.5A1,1 0 0,1 5.5,7.5A1,1 0 0,1 6.5,6.5M11.5,6.5A1,1 0 0,1 12.5,7.5A1,1 0 0,1 11.5,8.5A1,1 0 0,1 10.5,7.5A1,1 0 0,1 11.5,6.5M16,9C12.69,9 10,11.24 10,14C10,16.76 12.69,19 16,19C16.67,19 17.31,18.92 17.91,18.75L20,20L19.38,18.13C20.95,17.22 22,15.71 22,14C22,11.24 19.31,9 16,9M14,11.5A1,1 0 0,1 15,12.5A1,1 0 0,1 14,13.5A1,1 0 0,1 13,12.5A1,1 0 0,1 14,11.5M18,11.5A1,1 0 0,1 19,12.5A1,1 0 0,1 18,13.5A1,1 0 0,1 17,12.5A1,1 0 0,1 18,11.5Z"/>
+                    </svg>
+                </div>
+                <div class="binding-info">
+                    <div class="binding-name">微信</div>
+                    {% if wechat_identity %}
+                    <div class="binding-status bound">已绑定：{{ wechat_identity.provider_data.nickname or '微信用户' }}</div>
+                    {% else %}
+                    <div class="binding-status">未绑定</div>
+                    {% endif %}
+                </div>
+                <div class="binding-action">
+                    {% if wechat_identity %}
+                    {% if can_unbind_wechat %}
+                    <form action="/users/unbind/wechat" method="POST" onsubmit="return confirm('确定要解绑微信吗？解绑后将无法使用微信登录。')">
+                        <button type="submit" class="btn-outline btn-sm">解绑</button>
+                    </form>
+                    {% else %}
+                    <span class="unbind-tip">请先绑定邮箱后才能解绑</span>
+                    {% endif %}
+                    {% else %}
+                    <a href="/auth/wechat/authorize?action=bind" class="btn-wechat-sm">绑定微信</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 邮箱绑定 -->
+            <div class="binding-item">
+                <div class="binding-icon email-icon-box">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
+                    </svg>
+                </div>
+                <div class="binding-info">
+                    <div class="binding-name">邮箱</div>
+                    {% if user.email %}
+                    <div class="binding-status bound">已绑定：{{ user.email }}</div>
+                    {% else %}
+                    <div class="binding-status">未绑定</div>
+                    {% endif %}
+                </div>
+                <div class="binding-action">
+                    {% if not user.email %}
+                    <button type="button" class="btn-outline btn-sm" onclick="showBindEmailModal()">绑定邮箱</button>
+                    {% endif %}
+                </div>
+            </div>
+<!-- 实名认证 -->            <div class="binding-item">                <div class="binding-icon verify-icon-box">                    <svg viewBox="0 0 24 24" width="24" height="24">                        <path fill="currentColor" d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z"/>                    </svg>                </div>                <div class="binding-info">                    <div class="binding-name">实名认证</div>                    {% if user.id_card_verified %}                    <div class="binding-status bound">已认证</div>                    {% else %}                    <div class="binding-status">未认证（发帖和接单需要实名认证）</div>                    {% endif %}                </div>                <div class="binding-action">                    {% if user.id_card_verified %}                    <span class="verified-badge">已认证</span>                    {% else %}                    <a href="/auth/verify" class="btn-verify-sm">去认证</a>                    {% endif %}                </div>            </div>
+        </div>
+    </div>
+
+    <!-- 个人资料表单 -->
     <div class="card">
+        <h2 class="card-title">基本信息</h2>
         <div id="profile-form-container">
             {% include "users/partials/profile_form.html" %}
         </div>
     </div>
 
+</div>
+
+<!-- 绑定邮箱弹窗 -->
+<div id="bind-email-modal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeBindEmailModal()"></div>
+    <div class="modal-content modal-sm">
+        <div class="modal-header">
+            <h3>绑定邮箱</h3>
+            <button class="modal-close" onclick="closeBindEmailModal()">&times;</button>
+        </div>
+        <form action="/users/bind/email" method="POST" class="modal-body">
+            <div class="form-group">
+                <label class="form-label">邮箱地址</label>
+                <input type="email" name="email" class="form-input" placeholder="请输入邮箱" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">设置密码</label>
+                <input type="password" name="password" class="form-input" placeholder="至少6位字符" minlength="6" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">确认密码</label>
+                <input type="password" name="password_confirm" class="form-input" placeholder="再次输入密码" minlength="6" required>
+            </div>
+            <button type="submit" class="btn-primary btn-full">确认绑定</button>
+        </form>
+    </div>
 </div>
 
 <style>
@@ -36,10 +133,210 @@
     margin-bottom: 1.5rem;
 }
 
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+/* 账户绑定样式 */
+.binding-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.binding-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.binding-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.wechat-icon-box {
+    background: #07C160;
+    color: white;
+}
+
+.email-icon-box {
+}.verify-icon-box {    background: #10b981;    color: white;
+    background: var(--primary-color);
+    color: white;
+}
+
+.binding-info {
+    flex: 1;
+}
+
+.binding-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.binding-status {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.binding-status.bound {
+    color: #16a34a;
+}
+
+.binding-action {
+    flex-shrink: 0;
+}
+
+.btn-wechat-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #07C160;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-wechat-sm:hover {
+    background: #06AE56;
+}
+
+.btn-outline {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+    background: var(--bg-secondary);
+}
+
+.btn-sm {
+    font-size: 0.875rem;
+}
+
+.unbind-tip {
+}.btn-verify-sm {    display: inline-flex;    align-items: center;    gap: 0.5rem;    padding: 0.5rem 1rem;    background: #10b981;    color: white;    border: none;    border-radius: var(--border-radius);    font-size: 0.875rem;    text-decoration: none;    cursor: pointer;    transition: all 0.2s ease;}.btn-verify-sm:hover {    background: #059669;}.verified-badge {    display: inline-flex;    align-items: center;    gap: 0.25rem;    padding: 0.25rem 0.75rem;    background: #dcfce7;    color: #16a34a;    border-radius: var(--border-radius);    font-size: 0.875rem;    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* 弹窗样式 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-sm {
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-body .form-group {
+    margin-bottom: 1rem;
+}
+
+.modal-body .form-group:last-of-type {
+    margin-bottom: 1.5rem;
+}
+
 @media (min-width: 1200px) {
     .profile-page {
         max-width: 900px;
     }
 }
 </style>
+
+<script>
+function showBindEmailModal() {
+    document.getElementById('bind-email-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBindEmailModal() {
+    document.getElementById('bind-email-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeBindEmailModal();
+    }
+});
+</script>
 {% endblock %}

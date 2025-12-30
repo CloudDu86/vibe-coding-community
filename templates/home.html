@@ -5,11 +5,24 @@
 {% block content %}
 <section class="hero">
     <h1>AI生成社区</h1>
-    <p>AI编程遇到问题？让专家来帮你解决！</p>
+    {% if user and user.user_role == 'solver' %}
+    <p>帮助他人解决AI编程问题，技能变现！</p>
     <div class="cta-buttons">
-        <a href="/posts/create" class="btn-primary">发布求助</a>
+        <a href="/posts" class="btn-primary">浏览订单</a>
         <a href="/categories" class="btn-secondary">浏览分类</a>
     </div>
+    {% else %}
+    <p>AI编程遇到问题？让专家来帮你解决！</p>
+    <div class="cta-buttons">
+        {% if user and user.user_role == 'both' %}
+        <a href="/posts/create" class="btn-secondary">发布求助</a>
+        <a href="/posts" class="btn-primary">浏览订单</a>
+        {% else %}
+        <a href="/posts/create" class="btn-primary">发布求助</a>
+        <a href="/categories" class="btn-secondary">浏览分类</a>
+        {% endif %}
+    </div>
+    {% endif %}
 </section>
 
 <!-- 搜索已解决的帖子 -->

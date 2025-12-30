@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            {% if avatar_url %}
+            <img src="{{ avatar_url }}" alt="头像" class="wechat-avatar">
+            {% else %}
+            <div class="wechat-avatar-placeholder">
+                <svg viewBox="0 0 24 24" width="40" height="40">
+                    <path fill="#07C160" d="M9.5,4C5.36,4 2,6.69 2,10C2,11.89 3.08,13.56 4.78,14.66L4,17L6.5,15.5C7.39,15.81 8.37,16 9.41,16C9.15,15.37 9,14.7 9,14C9,10.69 12.13,8 16,8C16.19,8 16.38,8 16.56,8.03C15.54,5.69 12.78,4 9.5,4M6.5,6.5A1,1 0 0,1 7.5,7.5A1,1 0 0,1 6.5,8.5A1,1 0 0,1 5.5,7.5A1,1 0 0,1 6.5,6.5M11.5,6.5A1,1 0 0,1 12.5,7.5A1,1 0 0,1 11.5,8.5A1,1 0 0,1 10.5,7.5A1,1 0 0,1 11.5,6.5M16,9C12.69,9 10,11.24 10,14C10,16.76 12.69,19 16,19C16.67,19 17.31,18.92 17.91,18.75L20,20L19.38,18.13C20.95,17.22 22,15.71 22,14C22,11.24 19.31,9 16,9M14,11.5A1,1 0 0,1 15,12.5A1,1 0 0,1 14,13.5A1,1 0 0,1 13,12.5A1,1 0 0,1 14,11.5M18,11.5A1,1 0 0,1 19,12.5A1,1 0 0,1 18,13.5A1,1 0 0,1 17,12.5A1,1 0 0,1 18,11.5Z"/>
+                </svg>
+            </div>
+            {% endif %}
+            <h1 class="auth-title">欢迎，{{ nickname }}</h1>
+            <p class="auth-subtitle">{{ message or "请选择您的身份完成注册" }}</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form action="/auth/wechat/complete-register" method="POST" class="role-select-form">
+            <input type="hidden" name="openid" value="{{ openid }}">
+            <input type="hidden" name="unionid" value="{{ unionid }}">
+            <input type="hidden" name="nickname" value="{{ nickname }}">
+            <input type="hidden" name="avatar_url" value="{{ avatar_url }}">
+
+            <div class="form-group">
+                <div class="role-options">
+                    <label class="role-option">
+                        <input type="radio" name="user_role" value="asker" required>
+                        <div class="role-card">
+                            <div class="role-icon">
+                                <svg viewBox="0 0 24 24" width="32" height="32">
+                                    <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                                </svg>
+                            </div>
+                            <div class="role-info">
+                                <div class="role-title">需求端（求助者）</div>
+                                <div class="role-desc">我需要专家帮助解决AI编程问题</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="role-option">
+                        <input type="radio" name="user_role" value="solver">
+                        <div class="role-card">
+                            <div class="role-icon">
+                                <svg viewBox="0 0 24 24" width="32" height="32">
+                                    <path fill="currentColor" d="M12,3L1,9L12,15L21,10.09V17H23V9M5,13.18V17.18L12,21L19,17.18V13.18L12,17L5,13.18Z"/>
+                                </svg>
+                            </div>
+                            <div class="role-info">
+                                <div class="role-title">供给端（解决者）</div>
+                                <div class="role-desc">我有编程经验，想帮助他人解决问题并获得报酬</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group agreement-group">
+                <label class="agreement-label">
+                    <input type="checkbox" name="agree_terms" id="agree_terms" required>
+                    <span>我已阅读并同意 <a href="/auth/user-agreement" target="_blank" class="agreement-link">《用户注册与平台服务协议》</a></span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-wechat btn-full">
+                <svg class="wechat-icon" viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M9.5,4C5.36,4 2,6.69 2,10C2,11.89 3.08,13.56 4.78,14.66L4,17L6.5,15.5C7.39,15.81 8.37,16 9.41,16C9.15,15.37 9,14.7 9,14C9,10.69 12.13,8 16,8C16.19,8 16.38,8 16.56,8.03C15.54,5.69 12.78,4 9.5,4M6.5,6.5A1,1 0 0,1 7.5,7.5A1,1 0 0,1 6.5,8.5A1,1 0 0,1 5.5,7.5A1,1 0 0,1 6.5,6.5M11.5,6.5A1,1 0 0,1 12.5,7.5A1,1 0 0,1 11.5,8.5A1,1 0 0,1 10.5,7.5A1,1 0 0,1 11.5,6.5M16,9C12.69,9 10,11.24 10,14C10,16.76 12.69,19 16,19C16.67,19 17.31,18.92 17.91,18.75L20,20L19.38,18.13C20.95,17.22 22,15.71 22,14C22,11.24 19.31,9 16,9M14,11.5A1,1 0 0,1 15,12.5A1,1 0 0,1 14,13.5A1,1 0 0,1 13,12.5A1,1 0 0,1 14,11.5M18,11.5A1,1 0 0,1 19,12.5A1,1 0 0,1 18,13.5A1,1 0 0,1 17,12.5A1,1 0 0,1 18,11.5Z"/>
+                </svg>
+                <span>完成注册</span>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <a href="/auth/login">使用其他方式登录</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.wechat-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+    border: 3px solid #07C160;
+}
+
+.wechat-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f0fdf4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    border: 3px solid #07C160;
+}
+
+.auth-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.role-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.role-option {
+    cursor: pointer;
+}
+
+.role-option input[type="radio"] {
+    display: none;
+}
+
+.role-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+}
+
+.role-option input:checked + .role-card {
+    border-color: #07C160;
+    background: #f0fdf4;
+}
+
+.role-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.role-option input:checked + .role-card .role-icon {
+    background: #07C160;
+    color: white;
+}
+
+.role-info {
+    flex: 1;
+}
+
+.role-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.role-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.agreement-group {
+    margin-top: 1.5rem;
+}
+
+.agreement-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.agreement-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.agreement-link:hover {
+    text-decoration: underline;
+}
+
+.btn-wechat {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #07C160;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-wechat:hover {
+    background: #06AE56;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.auth-footer a:hover {
+    color: var(--primary-color);
+}
+
+.alert-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}

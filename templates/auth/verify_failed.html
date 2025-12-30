@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}认证失败 - AI生成社区{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <div class="failed-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        </div>
+        <h1 class="auth-title">认证失败</h1>
+        <p class="auth-subtitle">{{ error or '身份验证未通过' }}</p>
+
+        <div class="error-tips">
+            <p><strong>可能的原因：</strong></p>
+            <ul>
+                <li>姓名与身份证号不匹配</li>
+                <li>身份证号输入有误</li>
+                <li>网络连接异常</li>
+                <li>支付宝认证服务暂时不可用</li>
+            </ul>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/auth/verify" class="btn-primary">重新认证</a>
+            <a href="/users/profile" class="btn-secondary">返回个人中心</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 2.5rem;
+    text-align: center;
+}
+
+.failed-icon {
+    color: #dc2626;
+    margin-bottom: 1.5rem;
+}
+
+.auth-title {
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.error-tips {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.error-tips p {
+    margin: 0 0 0.75rem 0;
+    color: #dc2626;
+}
+
+.error-tips ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: #7f1d1d;
+}
+
+.error-tips li {
+    margin-bottom: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-buttons a {
+    flex: 1;
+    padding: 0.875rem;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+</style>
+{% endblock %}

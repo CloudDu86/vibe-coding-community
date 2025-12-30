@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}实名认证 - AI生成社区{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <div class="verify-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="M9 12l2 2 4-4"></path>
+            </svg>
+        </div>
+        <h1 class="auth-title">实名认证</h1>
+        <p class="auth-subtitle">完成实名认证后即可发布求助和接单</p>
+
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="/auth/verify/submit" method="post" class="verify-form">
+            <div class="form-group">
+                <label for="real_name">真实姓名</label>
+                <input
+                    type="text"
+                    id="real_name"
+                    name="real_name"
+                    placeholder="请输入身份证上的姓名"
+                    required
+                    minlength="2"
+                    maxlength="20"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="id_card">身份证号</label>
+                <input
+                    type="text"
+                    id="id_card"
+                    name="id_card"
+                    placeholder="请输入18位身份证号"
+                    required
+                    pattern="[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]"
+                    maxlength="18"
+                >
+                <small class="form-hint">您的信息将通过支付宝安全加密验证，我们不会存储您的身份证号</small>
+            </div>
+
+            <div class="verify-notice">
+                <div class="notice-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                </div>
+                <div class="notice-content">
+                    <p><strong>为什么需要实名认证？</strong></p>
+                    <ul>
+                        <li>保障交易双方的权益</li>
+                        <li>防止恶意刷单和欺诈行为</li>
+                        <li>提高平台信任度</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">
+                {% if alipay_configured %}
+                前往支付宝认证
+                {% else %}
+                提交认证
+                {% endif %}
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <a href="/users/profile">返回个人中心</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 2rem 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 2.5rem;
+}
+
+.verify-icon {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.auth-title {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.verify-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.verify-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.verify-form input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.verify-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.verify-notice {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.notice-icon {
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.notice-content p {
+    margin: 0 0 0.5rem 0;
+}
+
+.notice-content ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.notice-content li {
+    margin-bottom: 0.25rem;
+}
+
+.btn-block {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.auth-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    color: var(--primary-color);
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+</style>
+{% endblock %}

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Form, Depends, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from src.auth.dependencies import get_current_user, require_auth
+from src.auth.dependencies import get_current_user, require_auth, require_verified
 from src.posts.service import PostService
 from src.categories.service import CategoryService
 
@@ -71,7 +71,7 @@ async def posts_list(
 @router.get("/create", response_class=HTMLResponse)
 async def create_post_page(
     request: Request,
-    user: dict = Depends(require_auth),
+    user: dict = Depends(require_verified),
 ):
     """创建帖子页面"""
     categories = CategoryService.get_all_categories()
@@ -98,9 +98,24 @@ async def create_post(
     code_snippet: str = Form(None),
     budget_amount: float = Form(...),
     urgency: str = Form("medium"),
-    user: dict = Depends(require_auth),
+    user: dict = Depends(require_verified),
 ):
     """处理创建帖子"""
+    # 验证预算金额必须大于0
+    if not budget_amount or budget_amount <= 0:
+        categories = CategoryService.get_all_categories()
+        return templates.TemplateResponse(
+            "posts/create.html",
+            {
+                "request": request,
+                "title": "发布求助",
+                "user": user,
+                "categories": categories,
+                "error": "预算金额必须大于0",
+            },
+            status_code=400,
+        )
+
     success, error, post = PostService.create_post(
         author_id=user["id"],
         title=title,

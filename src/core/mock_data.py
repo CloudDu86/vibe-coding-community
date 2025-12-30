@@ -2,8 +2,15 @@
 模拟数据 - 用于演示模式（无需 Supabase）
 """
 import uuid
+import json
+from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+
+# 数据存储目录
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / ".data"
+DATA_DIR.mkdir(exist_ok=True)
+USERS_FILE = DATA_DIR / "users.json"
 
 # 模拟用户数据
 MOCK_USERS: Dict[str, dict] = {
@@ -13,8 +20,8 @@ MOCK_USERS: Dict[str, dict] = {
         "nickname": "演示用户",
         "user_role": "both",
         "avatar_url": None,
-        "real_name": None,
-        "id_card_verified": False,
+        "real_name": "张三",
+        "id_card_verified": True,
         "phone": None,
         "wechat_id": None,
         "bio": "这是一个演示账号",
@@ -39,6 +46,12 @@ MOCK_SOLVER_PROFILES: Dict[str, dict] = {
 
 # 模拟用户协议同意记录
 MOCK_AGREEMENTS: Dict[str, dict] = {}
+
+# 模拟用户身份绑定表（支持多登录方式）
+# key: identity_id, value: identity record
+MOCK_USER_IDENTITIES: Dict[str, dict] = {}
+# 索引: provider + provider_user_id -> identity_id
+MOCK_IDENTITY_INDEX: Dict[str, str] = {}
 
 # 模拟分类数据
 MOCK_CATEGORIES: List[dict] = [
@@ -154,6 +167,31 @@ def init_mock_responses():
         MOCK_RESPONSES[resp["id"]] = resp
 
 
+def save_users():
+    """保存用户数据到文件"""
+    try:
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(MOCK_USERS, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[MockData] Failed to save users: {e}")
+
+
+def load_users():
+    """从文件加载用户数据"""
+    global MOCK_USERS
+    if USERS_FILE.exists():
+        try:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
+                loaded_users = json.load(f)
+                # 合并加载的用户和默认用户
+                for user_id, user_data in loaded_users.items():
+                    MOCK_USERS[user_id] = user_data
+            print(f"[MockData] Loaded {len(loaded_users)} users from file")
+        except Exception as e:
+            print(f"[MockData] Failed to load users: {e}")
+
+
 # 初始化数据
+load_users()  # 加载持久化的用户数据
 init_mock_posts()
 init_mock_responses()

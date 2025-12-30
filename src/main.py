@@ -6,6 +6,8 @@ from fastapi.responses import HTMLResponse
 
 from src.config import settings
 from src.auth.router import router as auth_router
+from src.auth.wechat_router import router as wechat_router
+from src.auth.alipay_router import router as alipay_router
 from src.auth.dependencies import get_current_user
 from src.users.router import router as users_router
 from src.posts.router import router as posts_router
@@ -34,6 +36,8 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 # 注册路由
 app.include_router(auth_router, prefix="/auth", tags=["认证"])
+app.include_router(wechat_router, prefix="/auth", tags=["微信OAuth"])
+app.include_router(alipay_router, prefix="/auth", tags=["实名认证"])
 app.include_router(users_router, prefix="/users", tags=["用户"])
 app.include_router(posts_router, prefix="/posts", tags=["帖子"])
 app.include_router(categories_router, prefix="/categories", tags=["分类"])
