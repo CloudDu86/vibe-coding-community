@@ -93,14 +93,12 @@ class AuthService:
             user_id = auth_response.user.id
             admin_client = get_supabase_admin_client()
 
-            # 创建用户资料，包含协议同意时间
+            # 创建用户资料
             profile_data = {
                 "id": user_id,
                 "nickname": nickname,
                 "user_role": user_role,
             }
-            if terms_agreed_at:
-                profile_data["terms_agreed_at"] = terms_agreed_at
 
             admin_client.table("profiles").insert(profile_data).execute()
 
@@ -176,14 +174,19 @@ class AuthService:
 
         supabase = get_supabase_client()
         try:
+            print(f"[Auth] Attempting login for: {email}")
             auth_response = supabase.auth.sign_in_with_password({
                 "email": email,
                 "password": password,
             })
 
+            print(f"[Auth] Login response: {auth_response}")
+
             if not auth_response.session:
+                print(f"[Auth] No session returned")
                 return False, "登录失败", None
 
+            print(f"[Auth] Login successful for: {email}")
             return True, None, {
                 "access_token": auth_response.session.access_token,
                 "refresh_token": auth_response.session.refresh_token,
@@ -195,8 +198,11 @@ class AuthService:
 
         except Exception as e:
             error_msg = str(e)
+            print(f"[Auth] Login error: {error_msg}")
             if "invalid" in error_msg.lower() or "credentials" in error_msg.lower():
                 return False, "邮箱或密码错误", None
+            if "email not confirmed" in error_msg.lower():
+                return False, "请先验证邮箱后再登录", None
             return False, f"登录失败: {error_msg}", None
 
     @staticmethod

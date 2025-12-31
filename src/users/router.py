@@ -153,16 +153,20 @@ async def update_profile(
 
         return RedirectResponse(url="/users/profile?updated=true", status_code=303)
 
-    # Supabase 模式
-    supabase = get_supabase_client()
+    # Supabase 模式 - 使用管理员客户端绕过 RLS
+    from src.core.supabase import get_supabase_admin_client
+    supabase = get_supabase_admin_client()
 
     try:
-        supabase.table("profiles").update({
+        print(f"[ProfileUpdate] Updating Supabase for user: {user['id']}")
+        result = supabase.table("profiles").update({
             "nickname": nickname,
             "bio": bio,
             "phone": phone,
             "wechat_id": wechat_id,
         }).eq("id", user["id"]).execute()
+
+        print(f"[ProfileUpdate] Update result: {result.data}")
 
         # 更新 user 对象
         user["nickname"] = nickname
@@ -179,6 +183,9 @@ async def update_profile(
         return RedirectResponse(url="/users/profile?updated=true", status_code=303)
 
     except Exception as e:
+        print(f"[ProfileUpdate] Error: {e}")
+        import traceback
+        traceback.print_exc()
         error = f"更新失败: {str(e)}"
         if request.headers.get("HX-Request"):
             return templates.TemplateResponse(

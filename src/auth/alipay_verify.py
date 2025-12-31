@@ -242,20 +242,26 @@ class UserVerifyService:
 
         # 真实模式：更新 Supabase
         try:
-            from src.core.supabase import get_supabase_client
-            supabase = get_supabase_client()
+            from src.core.supabase import get_supabase_admin_client
+            supabase = get_supabase_admin_client()
 
+            print(f"[UserVerify] Updating user {user_id}: {real_name}, verified={verified}")
             result = supabase.table("profiles").update({
                 "real_name": real_name,
                 "id_card_verified": verified,
             }).eq("id", user_id).execute()
 
+            print(f"[UserVerify] Update result: {result}")
             if result.data:
+                print(f"[UserVerify] Successfully updated user {user_id}")
                 return True, None
+            print(f"[UserVerify] No data returned from update")
             return False, "更新认证状态失败"
 
         except Exception as e:
             print(f"[UserVerify] Update error: {e}")
+            import traceback
+            traceback.print_exc()
             return False, f"更新失败: {str(e)}"
 
     @staticmethod

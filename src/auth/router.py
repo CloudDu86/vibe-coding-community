@@ -39,17 +39,17 @@ async def login(
     success, error, session_data = AuthService.sign_in(email, password)
 
     if not success:
-        # HTMX 请求返回部分 HTML
+        # HTMX 请求返回部分 HTML，使用 200 状态码以便 HTMX 替换内容
         if request.headers.get("HX-Request"):
             return templates.TemplateResponse(
                 "auth/partials/login_form.html",
                 {"request": request, "error": error, "email": email},
-                status_code=400,
+                status_code=200,
             )
         return templates.TemplateResponse(
             "auth/login.html",
             {"request": request, "title": "登录", "error": error, "email": email},
-            status_code=400,
+            status_code=200,
         )
 
     # 设置 Cookie 并重定向
@@ -144,13 +144,15 @@ async def register(
             {"request": request, "title": "注册", "error": error, "email": email, "nickname": nickname, "agreement_date": agreement_date},
         )
 
-    # 注册成功，重定向到登录页
+    # 注册成功，重定向到登录页并提示验证邮箱
     # HTMX 请求使用 HX-Redirect 头
+    from urllib.parse import quote
+    redirect_url = f"/auth/login?registered=true&verify_email=true&email={quote(email)}"
     if request.headers.get("HX-Request"):
         response = HTMLResponse(content="", status_code=200)
-        response.headers["HX-Redirect"] = "/auth/login?registered=true"
+        response.headers["HX-Redirect"] = redirect_url
         return response
-    return RedirectResponse(url="/auth/login?registered=true", status_code=303)
+    return RedirectResponse(url=redirect_url, status_code=303)
 
 
 @router.post("/logout")

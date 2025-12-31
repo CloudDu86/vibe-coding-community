@@ -208,10 +208,15 @@ class UserIdentityService:
             ]
 
         # Supabase模式
-        from src.core.supabase import get_supabase_admin_client
-        admin_client = get_supabase_admin_client()
-        result = admin_client.table("user_identities").select("*").eq("user_id", user_id).execute()
-        return result.data or []
+        try:
+            from src.core.supabase import get_supabase_admin_client
+            admin_client = get_supabase_admin_client()
+            result = admin_client.table("user_identities").select("*").eq("user_id", user_id).execute()
+            return result.data or []
+        except Exception as e:
+            # 表不存在或其他错误时返回空列表
+            print(f"[UserIdentity] Get identities error: {e}")
+            return []
 
     @classmethod
     def delete_identity(cls, identity_id: str) -> bool:

@@ -10,7 +10,13 @@
 
         {% if request.query_params.get('registered') %}
         <div class="alert alert-success">
+            {% if request.query_params.get('verify_email') %}
+            <p><strong>注册成功！</strong></p>
+            <p style="margin-top: 0.5rem;">请检查您的邮箱 <strong>{{ request.query_params.get('email', '') }}</strong>，点击验证链接后即可登录。</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.9;">如果没有收到邮件，请检查垃圾邮件文件夹。</p>
+            {% else %}
             注册成功！请登录您的账户。
+            {% endif %}
         </div>
         {% endif %}
 
